@@ -1,0 +1,30 @@
+.logged-out-page {
+  padding-top: 22vh;
+  text-align: center;
+}
+
+.logged-out-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88rpx;
+  height: 88rpx;
+  margin: 0 auto 28rpx;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 38rpx;
+  font-weight: 600;
+}
+
+.logged-out-message {
+  margin-top: 24rpx;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.logged-out-button {
+  width: 280rpx;
+  margin-right: auto;
+  margin-left: auto;
+}

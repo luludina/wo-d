@@ -1,0 +1,79 @@
+<view class="screen leaderboard-screen">
+  <view class="period-tabs" role="tablist" aria-label="排行榜统计周期">
+    <view
+      wx:for="{{periodOptions}}"
+      wx:key="value"
+      class="period-tab {{activePeriod === item.value ? 'period-tab-active' : ''}}"
+      data-period="{{item.value}}"
+      bindtap="selectPeriod"
+      role="tab"
+      aria-selected="{{activePeriod === item.value}}"
+    >{{item.label}}</view>
+  </view>
+
+  <view wx:if="{{rangeText}}" class="range-text">{{rangeText}}</view>
+
+  <view wx:if="{{loading && !hasLoaded}}" class="state-block">正在读取排行榜...</view>
+
+  <view wx:elif="{{errorMessage}}" class="state-block error-state">
+    <view class="state-icon">!</view>
+    <view class="state-title">排行榜加载失败</view>
+    <view class="state-copy">{{errorMessage}}</view>
+    <button class="retry-button" bindtap="retry">重新加载</button>
+  </view>
+
+  <view wx:elif="{{hasLoaded && items.length === 0}}" class="state-block empty-state">
+    <view class="state-icon empty-icon">榜</view>
+    <view class="state-title">暂无可参与排行的成员</view>
+  </view>
+
+  <block wx:else>
+    <view class="summary-strip">
+      <view class="summary-item">
+        <text class="summary-value">{{myRankText}}</text>
+        <text class="summary-label">我的排名</text>
+      </view>
+      <view class="summary-item summary-middle">
+        <text class="summary-value">{{myQuantity}}</text>
+        <text class="summary-label">我的鸡蛋</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-value">{{totalQuantity}}</text>
+        <text class="summary-label">本期总量</text>
+      </view>
+    </view>
+
+    <view wx:if="{{podium.length > 0}}" class="podium">
+      <view wx:for="{{podium}}" wx:key="memberId" class="podium-item podium-position-{{item.position}}">
+        <view class="podium-medal">
+          <image src="{{item.medalIcon}}" mode="aspectFit" />
+          <text>{{item.rankText}}</text>
+        </view>
+        <image wx:if="{{item.avatarSrc}}" class="podium-avatar" src="{{item.avatarSrc}}" mode="aspectFill" />
+        <view wx:else class="podium-avatar avatar-placeholder">{{item.initial}}</view>
+        <view class="podium-name">{{item.nickname}}</view>
+        <view class="podium-quantity">{{item.quantity}} 个</view>
+      </view>
+    </view>
+
+    <view wx:else class="zero-banner">本周期暂无吃蛋记录</view>
+
+    <view class="ranking-section">
+      <view class="ranking-title">全部成员</view>
+      <view class="ranking-list">
+        <view wx:for="{{items}}" wx:key="memberId" class="ranking-row {{item.isCurrentUser ? 'ranking-row-me' : ''}}">
+          <view class="rank-number rank-number-{{item.rank}}">{{item.rankText}}</view>
+          <image wx:if="{{item.avatarSrc}}" class="member-avatar" src="{{item.avatarSrc}}" mode="aspectFill" />
+          <view wx:else class="member-avatar avatar-placeholder">{{item.initial}}</view>
+          <view class="member-name">
+            <text>{{item.nickname}}</text>
+            <text wx:if="{{item.isCurrentUser}}" class="me-badge">我</text>
+          </view>
+          <view class="member-quantity"><text>{{item.quantity}}</text> 个</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view wx:if="{{loading && hasLoaded && !errorMessage}}" class="refreshing">正在更新...</view>
+</view>

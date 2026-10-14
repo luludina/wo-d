@@ -1,0 +1,134 @@
+.admin-bills-screen {
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.page-header {
+  margin: 8rpx 4rpx 28rpx;
+}
+
+.page-title {
+  font-size: 42rpx;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.page-subtitle {
+  margin-top: 8rpx;
+  color: var(--color-muted);
+  font-size: 23rpx;
+}
+
+.state-block,
+.empty-state {
+  padding: 96rpx 28rpx;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  margin: 0 auto 20rpx;
+  border-radius: 12rpx;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.empty-title {
+  color: var(--color-text);
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.empty-copy {
+  margin-top: 12rpx;
+  font-size: 23rpx;
+}
+
+.bill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.bill-card {
+  padding: 28rpx;
+  border: 1rpx solid var(--color-border);
+  border-radius: 16rpx;
+  background: var(--color-surface);
+  box-shadow: 0 10rpx 30rpx rgba(38, 75, 54, 0.04);
+}
+
+.bill-card-hover {
+  background: #f8faf9;
+}
+
+.bill-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bill-period {
+  font-size: 29rpx;
+  font-weight: 600;
+}
+
+.bill-generated {
+  margin-top: 8rpx;
+  color: var(--color-muted);
+  font-size: 21rpx;
+}
+
+.bill-arrow {
+  width: 22rpx;
+  height: 22rpx;
+}
+
+.bill-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 26rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid var(--color-border);
+}
+
+.metric {
+  min-width: 0;
+  text-align: center;
+}
+
+.metric-middle {
+  border-right: 1rpx solid var(--color-border);
+  border-left: 1rpx solid var(--color-border);
+}
+
+.metric-value {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 31rpx;
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric-value text {
+  margin-right: 2rpx;
+  font-size: 20rpx;
+}
+
+.metric-amount {
+  color: var(--color-primary);
+}
+
+.metric-label {
+  margin-top: 6rpx;
+  color: var(--color-muted);
+  font-size: 21rpx;
+}

@@ -1,0 +1,29 @@
+<view class="screen notification-screen">
+  <view class="compact-header">
+    <view class="page-title">通知</view>
+    <view class="page-subtitle">供餐日期和成员状态的最新变化都会显示在这里。</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state">正在加载通知...</view>
+  <view wx:elif="{{items.length === 0}}" class="empty-card card">
+    <view class="empty-icon">✓</view>
+    <view class="empty-title">暂时没有通知</view>
+    <view class="empty-detail">新的供餐和成员消息会显示在这里。</view>
+  </view>
+  <view wx:else class="notification-list card">
+    <view wx:for="{{items}}" wx:key="id" class="notification-item {{item.isRead ? '' : 'notification-item-unread'}}" data-id="{{item.id}}" bindtap="openNotification">
+      <view class="notification-type-icon">{{item.icon}}</view>
+      <view class="notification-body">
+        <view class="notification-title">{{item.title}}</view>
+        <view class="notification-content">{{item.content}}</view>
+      </view>
+      <view class="notification-time">{{item.timeText}}</view>
+      <view wx:if="{{!item.isRead}}" class="notification-unread"></view>
+    </view>
+  </view>
+  <view wx:if="{{items.length > 0}}" class="pagination-state">
+    <text wx:if="{{loadingMore}}">正在加载更多...</text>
+    <text wx:elif="{{hasMore}}">继续上拉加载</text>
+    <text wx:else>已加载全部通知</text>
+  </view>
+</view>

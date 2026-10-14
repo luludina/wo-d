@@ -1,0 +1,57 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/leaderboard/leaderboard",
+    "pages/profile/profile",
+    "pages/review-status/review-status",
+    "pages/disabled/disabled",
+    "pages/logged-out/logged-out",
+    "pages/admin/members/members",
+    "pages/admin/meal-days/meal-days",
+    "pages/reservations/calendar/calendar",
+    "pages/notifications/notifications",
+    "pages/admin/bills/list/list",
+    "pages/admin/bills/detail/detail",
+    "pages/bills/list/list",
+    "pages/bills/detail/detail"
+  ],
+  "window": {
+    "navigationBarTitleText": "鸡蛋预约",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F6F8F5",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#829187",
+    "selectedColor": "#267450",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/reservations/calendar/calendar",
+        "text": "预约"
+      },
+      {
+        "pagePath": "pages/leaderboard/leaderboard",
+        "text": "排行"
+      },
+      {
+        "pagePath": "pages/admin/meal-days/meal-days",
+        "text": "管理"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,9 @@
+<view class="screen status-screen">
+  <view class="status-card card">
+    <view class="status-symbol">⌛</view>
+    <view class="eyebrow">成员申请</view>
+    <view class="title">等待管理员审核</view>
+    <view class="detail muted">审核结果将在下次进入时自动更新。</view>
+    <button class="secondary-button" loading="{{checking}}" bindtap="checkStatus">刷新状态</button>
+  </view>
+</view>

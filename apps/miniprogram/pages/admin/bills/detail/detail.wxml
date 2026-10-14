@@ -1,0 +1,34 @@
+<view class="screen bill-detail-screen">
+  <view wx:if="{{loading}}" class="state-block">正在读取账单汇总...</view>
+  <view wx:elif="{{errorMessage}}" class="state-block state-error">{{errorMessage}}</view>
+  <block wx:else>
+    <view class="summary-card">
+      <view class="summary-period">{{periodText}}</view>
+      <view class="summary-label">应收合计</view>
+      <view class="summary-amount"><text class="summary-currency">¥</text>{{amountText}}</view>
+      <view class="summary-metrics">
+        <view><text>{{memberCount}}</text> 位成员</view>
+        <view class="summary-divider"></view>
+        <view><text>{{totalQuantity}}</text> 个鸡蛋</view>
+      </view>
+    </view>
+
+    <button class="copy-button" bindtap="copyCollectionList" loading="{{copying}}" disabled="{{copying}}">复制群收款清单</button>
+
+    <view class="detail-section">
+      <view class="section-heading">
+        <view class="section-title">成员明细</view>
+        <view class="section-count">共 {{memberCount}} 人</view>
+      </view>
+      <view class="member-list">
+        <view wx:for="{{items}}" wx:key="memberId" class="member-row">
+          <image wx:if="{{item.avatarDisplayUrl}}" class="member-avatar" src="{{item.avatarDisplayUrl}}" mode="aspectFill" />
+          <view wx:else class="member-avatar avatar-placeholder">{{item.avatarText}}</view>
+          <view class="member-name">{{item.nickname}}</view>
+          <view class="member-eggs">{{item.totalQuantity}} 个</view>
+          <view class="member-amount">¥{{item.amountText}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,50 @@
+<view class="page">
+  <view class="compact-header">
+    <view class="admin-title">成员管理</view>
+    <view class="admin-subtitle">审核申请，维护成员的使用权限。</view>
+  </view>
+  <scroll-view class="tabs" scroll-x enhanced show-scrollbar="{{false}}">
+    <view class="tabs-inner">
+      <button
+        wx:for="{{tabs}}"
+        wx:key="value"
+        class="tab {{status === item.value ? 'tab-active' : ''}}"
+        data-status="{{item.value}}"
+        bindtap="selectTab"
+      >{{item.label}}</button>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{loading}}" class="state">正在加载...</view>
+  <view wx:elif="{{members.length === 0}}" class="state">暂无成员</view>
+
+  <view wx:else class="member-list">
+    <view wx:for="{{members}}" wx:key="id" class="member-card">
+      <view class="member-header">
+        <image wx:if="{{item.avatarSrc}}" class="avatar" src="{{item.avatarSrc}}" mode="aspectFill" />
+        <view wx:else class="avatar avatar-empty">{{item.initial}}</view>
+        <view class="identity">
+          <view class="name-row">
+            <text class="name">{{item.displayName}}</text>
+            <text wx:if="{{item.isAdmin}}" class="admin-badge">管理员</text>
+          </view>
+          <view class="meta">{{item.department || '未填写部门'}} · {{item.nickname || '未填写昵称'}}</view>
+          <view wx:if="{{item.phone}}" class="meta">{{item.phone}}</view>
+          <view wx:if="{{item.rejectionReason}}" class="reason">{{item.rejectionReason}}</view>
+        </view>
+      </view>
+
+      <view class="actions">
+        <block wx:if="{{item.memberStatus === 'pending'}}">
+          <button class="action action-primary" data-id="{{item.id}}" data-action="approve" bindtap="runAction" loading="{{actingId === item.id}}">通过</button>
+          <button class="action action-danger" data-id="{{item.id}}" data-action="reject" bindtap="runAction">拒绝</button>
+        </block>
+        <block wx:elif="{{item.memberStatus === 'approved'}}">
+          <button class="action" data-id="{{item.id}}" data-action="{{item.isAdmin ? 'revoke-admin' : 'grant-admin'}}" bindtap="runAction">{{item.isAdmin ? '撤销管理员' : '设为管理员'}}</button>
+          <button class="action action-danger" data-id="{{item.id}}" data-action="disable" bindtap="runAction" loading="{{actingId === item.id}}">停用</button>
+        </block>
+        <button wx:elif="{{item.memberStatus === 'disabled'}}" class="action action-primary" data-id="{{item.id}}" data-action="enable" bindtap="runAction" loading="{{actingId === item.id}}">重新启用</button>
+      </view>
+    </view>
+  </view>
+</view>

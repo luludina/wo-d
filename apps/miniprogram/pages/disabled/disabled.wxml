@@ -1,0 +1,8 @@
+<view class="screen disabled-screen">
+  <view class="disabled-card card">
+    <view class="status-symbol">!</view>
+    <view class="eyebrow">账号状态</view>
+    <view class="title">账号已被停用</view>
+    <view class="detail muted">请联系管理员了解详情。</view>
+  </view>
+</view>

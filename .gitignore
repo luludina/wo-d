@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+!.env.*.example
+.DS_Store
+*.log
+uploads/
+apps/api/data/
+deploy/data/
+backups/
+apps/miniprogram/miniprogram_npm/
+apps/miniprogram/project.private.config.json

@@ -1,0 +1,128 @@
+.notification-screen {
+  padding-bottom: calc(128rpx + env(safe-area-inset-bottom));
+}
+
+.compact-header {
+  margin: 8rpx 4rpx 26rpx;
+}
+
+.page-title {
+  font-size: 42rpx;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.page-subtitle {
+  margin-top: 8rpx;
+  color: var(--color-muted);
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+.state {
+  padding: 100rpx 0;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.empty-card {
+  text-align: center;
+}
+
+.empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 92rpx;
+  height: 92rpx;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 38rpx;
+}
+
+.empty-title {
+  margin-top: 24rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.empty-detail {
+  margin-top: 10rpx;
+  color: var(--color-muted);
+  font-size: 23rpx;
+}
+
+.notification-list {
+  padding: 8rpx 28rpx;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  min-height: 112rpx;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--color-border);
+  gap: 14rpx;
+}
+
+.notification-item:last-child {
+  border-bottom: 0;
+}
+
+.notification-item-unread .notification-title {
+  font-weight: 600;
+}
+
+.notification-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-type-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 48rpx;
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 14rpx;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 20rpx;
+}
+
+.notification-title {
+  font-size: 27rpx;
+}
+
+.notification-content {
+  margin-top: 8rpx;
+  color: var(--color-muted);
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+.notification-time {
+  flex: 0 0 auto;
+  color: var(--color-muted);
+  font-size: 20rpx;
+  white-space: nowrap;
+}
+
+.notification-unread {
+  flex: 0 0 10rpx;
+  width: 10rpx;
+  height: 10rpx;
+  margin-top: 12rpx;
+  border-radius: 50%;
+  background: #d95c4f;
+}
+
+.pagination-state {
+  padding: 28rpx 0 10rpx;
+  color: var(--color-muted);
+  font-size: 21rpx;
+  text-align: center;
+}

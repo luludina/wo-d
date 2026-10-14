@@ -1,0 +1,17 @@
+{
+  "name": "@egg-booking/miniprogram",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@egg-booking/contracts": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --experimental-strip-types --test ../../tests/miniprogram/*.test.ts"
+  },
+  "devDependencies": {
+    "miniprogram-api-typings": "^4.1.0",
+    "typescript": "^5.9.3"
+  }
+}

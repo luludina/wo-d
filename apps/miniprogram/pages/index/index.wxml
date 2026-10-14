@@ -1,0 +1,127 @@
+<view class="screen">
+  <block wx:if="{{state === 'loading'}}">
+    <view class="loading">正在进入...</view>
+  </block>
+
+  <block wx:elif="{{state === 'loggedOut'}}">
+    <view class="logged-out-state">
+      <view class="logged-out-icon">✓</view>
+      <view class="title">已退出登录</view>
+      <view class="message muted">重新登录后即可继续使用鸡蛋预约。</view>
+      <button class="primary-button logged-out-button" bindtap="loginAgain">重新登录</button>
+    </view>
+  </block>
+
+  <block wx:elif="{{state === 'error'}}">
+    <view class="eyebrow">连接失败</view>
+    <view class="title">暂时无法进入</view>
+    <view class="message muted">{{errorMessage}}</view>
+    <button class="primary-button" bindtap="loadSession">重试</button>
+  </block>
+
+  <block wx:else>
+    <view class="hero-banner">
+      <view class="hero-copy">
+        <view class="eyebrow">{{roleLabel}} · 鸡蛋预约</view>
+        <view class="hero-title">早上好，{{displayName}}</view>
+        <view class="hero-date">今天 · {{todayLabel}}</view>
+        <view class="hero-desc">提前安排每天的鸡蛋，厨房准备更从容。</view>
+      </view>
+      <view class="banner-art"><view class="egg-shape"><view class="egg-yolk"></view></view></view>
+    </view>
+
+    <block wx:if="{{!isAdmin}}">
+      <view class="today-card card">
+        <view class="today-kicker">今天 · {{todayLabel}}</view>
+        <view wx:if="{{todayLoading}}" class="today-loading">正在读取今日预约...</view>
+        <block wx:else>
+          <view class="today-status status-{{todayState}}">{{todayTitle}}</view>
+          <view class="today-detail">{{todayDetail}}</view>
+          <view wx:if="{{todayCanEdit}}" class="today-controls">
+            <button class="quantity-button" data-delta="-1" bindtap="adjustToday" disabled="{{todaySaving || todayQuantity === null || todayQuantity === 0}}">−</button>
+            <view class="today-quantity">{{todayQuantity === null ? '未填' : todayQuantity}}</view>
+            <button class="quantity-button" data-delta="1" bindtap="adjustToday" disabled="{{todaySaving || todayQuantity === 5}}">＋</button>
+            <button class="zero-button" bindtap="setTodayZero" loading="{{todaySaving}}" disabled="{{todaySaving}}">填 0</button>
+          </view>
+        </block>
+        <view class="egg-stats">
+          <view class="egg-stat">
+            <view class="egg-stat-icon">周</view>
+            <view class="egg-stat-copy">
+              <view class="egg-stat-label">本周累计</view>
+              <view class="egg-stat-value">{{eggStatsLoading ? '--' : weekEggQuantity}}<text> 个</text></view>
+            </view>
+          </view>
+          <view class="egg-stat egg-stat-total">
+            <view class="egg-stat-icon egg-stat-icon-total">总</view>
+            <view class="egg-stat-copy">
+              <view class="egg-stat-label">全部累计</view>
+              <view class="egg-stat-value">{{eggStatsLoading ? '--' : totalEggQuantity}}<text> 个</text></view>
+            </view>
+          </view>
+        </view>
+        <view class="calendar-entry-row">
+          <view class="calendar-entry" bindtap="openReservations" hover-class="calendar-entry-hover" role="button" aria-label="查看完整预约日历">
+            <image class="calendar-entry-icon" src="/assets/icons/tabbar/calendar-active.svg" mode="aspectFit" />
+            <text>完整预约日历</text>
+            <image class="calendar-entry-arrow" src="/assets/icons/profile/right.svg" mode="aspectFit" />
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="admin-today-card card">
+        <view class="today-kicker">今天 · {{adminTodayDate}}</view>
+        <view wx:if="{{adminTodayLoading}}" class="today-loading">正在读取今日汇总...</view>
+        <block wx:else>
+          <view wx:if="{{adminTodayStatus === '今日不供餐'}}" class="today-status status-closed">今日不供餐</view>
+          <block wx:else>
+            <view class="admin-total-label">今日需蒸</view>
+            <view class="admin-total-number">{{adminTodayTotal}}</view>
+            <view class="admin-total-unit">个鸡蛋</view>
+          </block>
+          <view class="admin-status">{{adminTodayStatus}}</view>
+          <view class="today-detail">{{adminTodayDetail}}</view>
+          <view class="admin-stats">
+            <view class="admin-stat"><text class="admin-stat-number">{{adminFilledCount}}</text><text class="admin-stat-label">已填报</text></view>
+            <view class="admin-stat"><text class="admin-stat-number">{{adminUnfilledCount}}</text><text class="admin-stat-label">未填报</text></view>
+          </view>
+          <view class="tomorrow-summary">
+            <view class="tomorrow-icon">明</view>
+            <view class="tomorrow-copy">
+              <view class="tomorrow-label">明天 · {{adminTomorrowDate}}</view>
+              <view class="tomorrow-status">{{adminTomorrowStatus}}</view>
+            </view>
+            <view wx:if="{{adminTomorrowStatus !== '明日不供餐'}}" class="tomorrow-total">
+              <text>{{adminTomorrowTotal}}</text> 个
+            </view>
+          </view>
+        </block>
+      </view>
+    </block>
+
+    <view wx:if="{{notifications.length > 0}}" class="notifications-section card">
+      <view class="notifications-header">
+        <view class="notifications-title">
+          <view class="notifications-icon-shell">
+            <image class="notifications-icon" src="/assets/icons/home/bell.svg" mode="aspectFit" />
+          </view>
+          <text>通知</text>
+          <text wx:if="{{unreadNotificationCount > 0}}" class="unread-badge">{{unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}}</text>
+        </view>
+        <view class="notifications-more" bindtap="openNotifications" hover-class="notifications-more-hover" role="button" aria-label="查看全部通知">
+          <image class="notifications-more-icon" src="/assets/icons/home/double-right.svg" mode="aspectFit" />
+        </view>
+      </view>
+      <view class="notification-list">
+        <view wx:for="{{notifications}}" wx:key="id" class="notification-row" data-id="{{item.id}}" bindtap="openNotification">
+          <view class="notification-type-icon">{{item.icon}}</view>
+          <view class="notification-text">{{item.content}}</view>
+          <view class="notification-time">{{item.timeText}}</view>
+          <view wx:if="{{!item.isRead}}" class="notification-unread"></view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

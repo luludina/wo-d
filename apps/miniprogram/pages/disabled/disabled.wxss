@@ -1,0 +1,29 @@
+.disabled-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.disabled-card {
+  width: 100%;
+  text-align: center;
+}
+
+.status-symbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 112rpx;
+  height: 112rpx;
+  margin: 0 auto 28rpx;
+  border-radius: 50%;
+  background: #fbe9e6;
+  color: var(--color-danger);
+  font-size: 46rpx;
+  font-weight: 600;
+}
+
+.detail {
+  margin-top: 24rpx;
+}

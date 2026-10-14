@@ -1,0 +1,124 @@
+<view class="screen meal-screen">
+  <view class="page-header">
+    <view class="page-title">供餐管理</view>
+  </view>
+
+  <view class="operation-card card">
+    <view class="card-heading">
+      <view class="heading-icon">日</view>
+      <view class="section-title">设置日期</view>
+    </view>
+
+    <view class="date-range-row">
+      <picker class="date-picker" mode="date" value="{{from}}" start="{{today}}" end="{{bookingEnd}}" bindchange="changeStartDate">
+        <view class="date-field">
+          <text class="field-label">开始日期</text>
+          <view class="field-value-row"><text class="date-value">{{fromLabel}}</text><text class="field-arrow">›</text></view>
+        </view>
+      </picker>
+      <view class="range-divider">至</view>
+      <picker class="date-picker" mode="date" value="{{to || from}}" start="{{from}}" end="{{bookingEnd}}" disabled="{{!from}}" bindchange="changeEndDate">
+        <view class="date-field {{!to ? 'date-field-empty' : ''}}">
+          <text class="field-label">结束日期</text>
+          <view class="field-value-row"><text class="date-value">{{toLabel}}</text><text class="field-arrow">›</text></view>
+        </view>
+      </picker>
+    </view>
+
+    <view class="range-summary">
+      <view class="summary-icon">✓</view>
+      <text>{{rangeSummaryText}}</text>
+    </view>
+
+    <view wx:if="{{from === to && singleStatusText}}" class="single-detail">
+      <view class="single-main">
+        <text class="status-dot status-{{singleStatusText === '开放' ? 'open' : 'closed'}}"></text>
+        <text>{{singleStatusText}}</text>
+        <text class="detail-divider">·</text>
+        <text class="detail-muted">{{singleSourceText}}</text>
+      </view>
+      <view wx:if="{{singleReasonText}}" class="single-reason">{{singleReasonText}}</view>
+    </view>
+
+    <input class="reason-input" value="{{reason}}" maxlength="300" bindinput="changeReason" placeholder="原因（选填）" />
+
+    <view class="action-row">
+      <view
+        class="action-button open-button {{!canOpen || applying ? 'action-disabled' : ''}}"
+        data-status="open"
+        bindtap="applyStatus"
+        role="button"
+        aria-disabled="{{!canOpen || applying}}"
+      >{{applying && pendingAction === 'open' ? '处理中...' : '开放'}}</view>
+      <view
+        class="action-button close-action {{!canClose || applying ? 'action-disabled' : ''}}"
+        data-status="closed"
+        bindtap="applyStatus"
+        role="button"
+        aria-disabled="{{!canClose || applying}}"
+      >{{applying && pendingAction === 'closed' ? '处理中...' : '关闭'}}</view>
+    </view>
+  </view>
+
+  <view class="calendar-card card">
+    <view class="month-toolbar">
+      <view class="month-button" bindtap="previousMonth" hover-class="icon-button-hover" role="button" aria-label="上一个月"><text class="month-arrow">‹</text></view>
+      <view class="month-label">{{currentMonthLabel}}</view>
+      <view class="month-button {{!canNavigateNext ? 'month-button-disabled' : ''}}" bindtap="nextMonth" hover-class="icon-button-hover" role="button" aria-label="下一个月"><text class="month-arrow">›</text></view>
+    </view>
+
+    <view class="weekday-grid">
+      <view class="weekday-cell">一</view>
+      <view class="weekday-cell">二</view>
+      <view class="weekday-cell">三</view>
+      <view class="weekday-cell">四</view>
+      <view class="weekday-cell">五</view>
+      <view class="weekday-cell weekend">六</view>
+      <view class="weekday-cell weekend">日</view>
+    </view>
+
+    <view wx:if="{{loading}}" class="calendar-loading">正在加载...</view>
+    <view wx:else class="calendar-grid">
+      <view
+        wx:for="{{calendarCells}}"
+        wx:key="key"
+        class="calendar-cell relation-{{item.relation}} {{item.isToday ? 'is-today' : ''}} {{item.isInRange ? 'is-in-range' : ''}} {{item.isRangeStart ? 'is-range-start' : ''}} {{item.isRangeEnd ? 'is-range-end' : ''}} {{!item.canSelect ? 'is-disabled' : ''}}"
+        data-date="{{item.date}}"
+        data-can-select="{{item.canSelect}}"
+        bindtap="selectCalendarDay"
+      >
+        <view class="day-number">{{item.dayNumber}}</view>
+        <block wx:if="{{item.inCurrentMonth}}">
+          <view wx:if="{{item.status === 'open'}}" class="day-state"><text class="open-dot"></text></view>
+          <view wx:elif="{{item.status === 'closed'}}" class="day-state closed-mark">休</view>
+          <view wx:if="{{item.source === 'override'}}" class="override-mark"></view>
+        </block>
+      </view>
+    </view>
+
+    <view class="legend">
+      <view class="legend-item"><text class="open-dot"></text><text>开放</text></view>
+      <view class="legend-item"><text class="legend-closed">休</text><text>关闭</text></view>
+      <view class="legend-item"><text class="override-mark legend-override"></text><text>管理员设置</text></view>
+    </view>
+  </view>
+</view>
+
+<view wx:if="{{confirmOpen}}" class="sheet-overlay" bindtap="cancelConfirmation">
+  <view class="confirm-sheet" catchtap="noop">
+    <view class="sheet-handle"></view>
+    <view class="confirm-icon">!</view>
+    <view class="confirm-title">确认关闭供餐</view>
+    <view class="confirm-range">{{fromLabel}} 至 {{toLabel}}</view>
+    <view class="impact-grid">
+      <view class="impact-item"><text class="impact-value">{{pendingPreview.changedDateCount}}</text><text class="impact-label">关闭天数</text></view>
+      <view class="impact-item"><text class="impact-value">{{pendingPreview.cancelledReservationCount}}</text><text class="impact-label">取消预约</text></view>
+      <view class="impact-item"><text class="impact-value">{{pendingPreview.cancelledEggCount}}</text><text class="impact-label">涉及鸡蛋</text></view>
+      <view class="impact-item"><text class="impact-value">{{pendingPreview.affectedMemberCount}}</text><text class="impact-label">影响成员</text></view>
+    </view>
+    <view class="confirm-actions">
+      <view class="confirm-button cancel-button" bindtap="cancelConfirmation" role="button">取消</view>
+      <view class="confirm-button danger-button {{confirming ? 'action-disabled' : ''}}" bindtap="confirmClose" role="button">{{confirming ? '处理中...' : '确认关闭'}}</view>
+    </view>
+  </view>
+</view>

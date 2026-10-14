@@ -1,0 +1,28 @@
+.status-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.status-card {
+  width: 100%;
+  text-align: center;
+}
+
+.status-symbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 112rpx;
+  height: 112rpx;
+  margin: 0 auto 28rpx;
+  border-radius: 50%;
+  background: #fff3dc;
+  font-size: 46rpx;
+}
+
+.detail {
+  margin-top: 24rpx;
+  line-height: 1.7;
+}

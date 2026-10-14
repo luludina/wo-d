@@ -1,0 +1,168 @@
+<view class="screen reservation-screen">
+  <view class="page-header">
+    <view>
+      <view class="page-title">我的预约</view>
+      <view class="page-subtitle">可预约至 {{bookingEndLabel}}</view>
+    </view>
+    <view class="settings-button" bindtap="openSettings" hover-class="settings-button-hover" role="button" aria-label="批量预约">
+      <image class="settings-button-icon" src="/assets/icons/profile/edit.svg" mode="aspectFit" />
+      <text>批量预约</text>
+    </view>
+  </view>
+
+  <view class="calendar-card card">
+    <view class="month-toolbar">
+      <view class="month-button month-button-previous" bindtap="previousMonth" hover-class="icon-button-hover" role="button" aria-label="上一个月"><text class="month-arrow">‹</text></view>
+      <view class="month-label">{{currentMonthLabel}}</view>
+      <view class="month-button month-button-next {{!canNavigateNext ? 'month-button-disabled' : ''}}" bindtap="nextMonth" hover-class="icon-button-hover" role="button" aria-label="下一个月"><text class="month-arrow">›</text></view>
+    </view>
+
+    <view class="weekday-grid">
+      <view class="weekday-cell">一</view>
+      <view class="weekday-cell">二</view>
+      <view class="weekday-cell">三</view>
+      <view class="weekday-cell">四</view>
+      <view class="weekday-cell">五</view>
+      <view class="weekday-cell weekend">六</view>
+      <view class="weekday-cell weekend">日</view>
+    </view>
+
+    <view wx:if="{{loading}}" class="calendar-loading">正在加载...</view>
+    <view wx:else class="calendar-grid">
+      <view
+        wx:for="{{calendarCells}}"
+        wx:key="key"
+        class="calendar-cell relation-{{item.relation}} state-{{item.stateKind}} {{item.isToday ? 'is-today' : ''}} {{item.isSelected ? 'is-selected' : ''}} {{!item.canNavigate ? 'cannot-navigate' : ''}}"
+        data-date="{{item.date}}"
+        data-relation="{{item.relation}}"
+        data-can-navigate="{{item.canNavigate}}"
+        bindtap="selectCalendarDay"
+      >
+        <view class="day-number">{{item.dayNumber}}</view>
+        <block wx:if="{{item.inCurrentMonth}}">
+          <view wx:if="{{item.stateKind === 'reserved'}}" class="cell-value reserved-value"><view class="mini-egg"></view><text>{{item.quantity}}</text></view>
+          <view wx:elif="{{item.stateKind === 'zero'}}" class="cell-value zero-value">0</view>
+          <view wx:elif="{{item.stateKind === 'unfilled'}}" class="cell-value unfilled-value">—</view>
+          <view wx:elif="{{item.stateKind === 'closed'}}" class="cell-value state-mark">休</view>
+          <view wx:elif="{{item.stateKind === 'locked'}}" class="cell-value state-mark">锁</view>
+          <view wx:elif="{{item.stateKind === 'cancelled'}}" class="cell-value state-mark">消</view>
+          <view wx:elif="{{item.stateKind === 'unavailable'}}" class="cell-value state-mark">待</view>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <view class="legend">
+    <view class="legend-item"><view class="mini-egg"></view><text>已预约</text></view>
+    <view class="legend-item"><text class="legend-symbol">0</text><text>明确不吃</text></view>
+    <view class="legend-item"><text class="legend-symbol">—</text><text>未填写</text></view>
+    <view class="legend-item"><text class="legend-symbol">锁</text><text>已截止</text></view>
+    <view class="legend-item"><text class="legend-symbol">休</text><text>不供餐</text></view>
+  </view>
+
+  <view class="day-report card">
+    <view class="day-report-header">
+      <view class="day-report-title-row">
+        <view class="day-report-icon-shell">
+          <image class="day-report-icon" src="/assets/icons/profile/team.svg" mode="aspectFit" />
+        </view>
+        <view>
+          <view class="day-report-title">{{selectedDateLabel}}上报详情</view>
+          <view class="day-report-summary">{{dayDetailsFilledCount}}人已填报 · 共{{dayDetailsTotalEggs}}个鸡蛋</view>
+        </view>
+      </view>
+      <view
+        wx:if="{{selectedDay && selectedDay.canEdit}}"
+        class="day-report-action"
+        bindtap="openDayPanel"
+        hover-class="day-report-action-hover"
+        role="button"
+        aria-label="{{selectedDay.reservation && selectedDay.reservation.status === 'active' ? '修改当日预约' : '填报当日预约'}}"
+      >{{selectedDay.reservation && selectedDay.reservation.status === 'active' ? '修改' : '填报'}}</view>
+    </view>
+    <view wx:if="{{dayDetailsLoading}}" class="day-report-state">正在加载...</view>
+    <view wx:elif="{{dayDetailsError}}" class="day-report-state day-report-error">{{dayDetailsError}}</view>
+    <block wx:else>
+      <view wx:if="{{dayDetailItems.length === 0}}" class="day-report-state">当日还没有成员填报</view>
+      <view wx:else class="day-report-list">
+        <view wx:for="{{dayDetailItems}}" wx:key="memberId" class="day-report-row">
+          <image wx:if="{{item.avatarUrl}}" class="day-report-avatar" src="{{item.avatarUrl}}" mode="aspectFill" />
+          <view wx:else class="day-report-avatar day-report-avatar-fallback">{{item.avatarFallback}}</view>
+          <view class="day-report-name">{{item.nickname}}</view>
+          <view class="day-report-quantity {{item.quantity === 0 ? 'day-report-quantity-zero' : ''}}">
+            <text>{{item.quantity}}</text> 个
+          </view>
+        </view>
+      </view>
+      <view class="unsubmitted-section">
+        <view class="unsubmitted-header">
+          <text>未上报</text>
+          <text wx:if="{{selectedDay && selectedDay.status === 'open'}}" class="unsubmitted-count">{{dayDetailsUnsubmittedCount}}人</text>
+        </view>
+        <view wx:if="{{selectedDay && selectedDay.status === 'closed'}}" class="unsubmitted-empty">当日不供餐，无需上报</view>
+        <view wx:elif="{{dayUnsubmittedItems.length === 0}}" class="unsubmitted-empty">全部成员均已上报</view>
+        <view wx:else class="day-report-list unsubmitted-list">
+          <view wx:for="{{dayUnsubmittedItems}}" wx:key="memberId" class="day-report-row">
+            <image wx:if="{{item.avatarUrl}}" class="day-report-avatar" src="{{item.avatarUrl}}" mode="aspectFill" />
+            <view wx:else class="day-report-avatar day-report-avatar-fallback">{{item.avatarFallback}}</view>
+            <view class="day-report-name">{{item.nickname}}</view>
+            <view class="unsubmitted-tag">未上报</view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>
+
+<view wx:if="{{dayPanelOpen}}" class="sheet-overlay" bindtap="closeDayPanel">
+  <view class="bottom-sheet" catchtap="noop">
+    <view class="sheet-handle"></view>
+    <view class="sheet-header">
+      <view>
+        <view class="sheet-title">{{selectedDayLabel}}</view>
+        <view class="sheet-status">{{selectedDay.stateText}}</view>
+      </view>
+      <view class="close-button" bindtap="closeDayPanel" hover-class="icon-button-hover" role="button" aria-label="关闭">×</view>
+    </view>
+
+    <block wx:if="{{selectedDay.canEdit}}">
+      <view class="quantity-editor">
+        <button class="editor-button" data-delta="-1" bindtap="adjustDraftQuantity" disabled="{{draftQuantity === null || draftQuantity === 0}}">−</button>
+        <button class="quantity-display" bindtap="toggleQuantityOptions">{{draftQuantity === null ? '未填写' : draftQuantity}}</button>
+        <button class="editor-button" data-delta="1" bindtap="adjustDraftQuantity" disabled="{{draftQuantity === 5}}">＋</button>
+      </view>
+      <view wx:if="{{showQuantityOptions}}" class="quantity-options">
+        <button wx:for="{{quantityOptions}}" wx:key="*this" class="quantity-option {{draftQuantity === item ? 'quantity-option-active' : ''}}" data-quantity="{{item}}" bindtap="chooseQuantity">{{item}}</button>
+      </view>
+      <button class="primary-button submit-button" bindtap="submitDay" loading="{{daySaving}}" disabled="{{!dayCanSubmit || daySaving}}">提交</button>
+    </block>
+    <view wx:else class="readonly-state">
+      <view class="readonly-icon">{{selectedDay.stateKind === 'closed' ? '休' : selectedDay.stateKind === 'unavailable' ? '待' : '锁'}}</view>
+      <view>{{selectedDayReadonlyText}}</view>
+    </view>
+  </view>
+</view>
+
+<view wx:if="{{settingsOpen}}" class="sheet-overlay" bindtap="closeSettings">
+  <view class="bottom-sheet settings-sheet" catchtap="noop">
+    <view class="sheet-handle"></view>
+    <view class="sheet-header">
+      <view>
+        <view class="sheet-title">批量设置</view>
+        <view class="sheet-status">提交后覆盖范围内已有预约</view>
+      </view>
+      <view class="close-button" bindtap="closeSettings" hover-class="icon-button-hover" role="button" aria-label="关闭">×</view>
+    </view>
+    <view class="mode-selector">
+      <view class="mode-button {{batchMode === 'week' ? 'mode-button-active' : ''}}" data-mode="week" bindtap="selectBatchMode" role="button">按周填充</view>
+      <view class="mode-button {{batchMode === 'month' ? 'mode-button-active' : ''}}" data-mode="month" bindtap="selectBatchMode" role="button">按月填充</view>
+    </view>
+    <view class="batch-label">每天鸡蛋数量</view>
+    <view class="quantity-editor">
+      <view class="editor-button {{batchQuantity === 0 ? 'control-disabled' : ''}}" data-delta="-1" bindtap="adjustBatchQuantity" role="button" aria-disabled="{{batchQuantity === 0}}">−</view>
+      <view class="quantity-display batch-quantity">{{batchQuantity}}</view>
+      <view class="editor-button {{batchQuantity === 5 ? 'control-disabled' : ''}}" data-delta="1" bindtap="adjustBatchQuantity" role="button" aria-disabled="{{batchQuantity === 5}}">＋</view>
+    </view>
+    <view class="primary-button submit-button {{batchSaving ? 'control-disabled' : ''}}" bindtap="submitBatch" role="button" aria-disabled="{{batchSaving}}">{{batchSaving ? '提交中...' : '提交'}}</view>
+  </view>
+</view>
