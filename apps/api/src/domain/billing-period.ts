@@ -1,4 +1,4 @@
-import { formatBusinessDate, parseBusinessDate } from './business-date.js'
+import { formatBusinessDate, getShanghaiToday, parseBusinessDate } from './business-date.js'
 
 const shanghaiTimeFormatter = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Asia/Shanghai',
@@ -24,7 +24,20 @@ export function getBillingWeek(date: string): Pick<BillingPeriod, 'weekStart' | 
   return { weekStart, weekEnd: addDays(weekStart, 6) }
 }
 
-export function getLatestDueWeekEnd(now = new Date()): string {
+export function getBillingPeriodForDate(
+  billingStartDate: string,
+  date = getShanghaiToday(),
+): BillingPeriod {
+  parseBusinessDate(billingStartDate)
+  const { weekStart } = getBillingWeek(date)
+  return {
+    weekStart,
+    weekEnd: addDays(weekStart, 4),
+    reservationFrom: weekStart < billingStartDate ? billingStartDate : weekStart,
+  }
+}
+
+export function getLatestDueWeekEnd(now = new Date(), cutoffTime = '18:00'): string {
   const today = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Shanghai',
     year: 'numeric',
@@ -32,25 +45,31 @@ export function getLatestDueWeekEnd(now = new Date()): string {
     day: '2-digit',
   }).format(now)
   const current = getBillingWeek(today)
-  const isDue = today === current.weekEnd && shanghaiTimeFormatter.format(now) >= '18:00'
-  return isDue ? current.weekEnd : addDays(current.weekStart, -1)
+  const currentFriday = addDays(current.weekStart, 4)
+  const isDue = today > currentFriday
+    || (today === currentFriday && shanghaiTimeFormatter.format(now) >= cutoffTime)
+  return isDue ? currentFriday : addDays(current.weekStart, -3)
 }
 
-export function enumerateDueBillingPeriods(startDate: string, now = new Date()): BillingPeriod[] {
+export function enumerateDueBillingPeriods(
+  startDate: string,
+  now = new Date(),
+  cutoffTime = '18:00',
+): BillingPeriod[] {
   parseBusinessDate(startDate)
   const firstWeek = getBillingWeek(startDate)
-  const latestDueWeekEnd = getLatestDueWeekEnd(now)
-  if (firstWeek.weekEnd > latestDueWeekEnd) return []
+  const latestDueWeekEnd = getLatestDueWeekEnd(now, cutoffTime)
+  if (addDays(firstWeek.weekStart, 4) > latestDueWeekEnd) return []
 
   const periods: BillingPeriod[] = []
   for (
     let weekStart = firstWeek.weekStart;
-    addDays(weekStart, 6) <= latestDueWeekEnd;
+    addDays(weekStart, 4) <= latestDueWeekEnd;
     weekStart = addDays(weekStart, 7)
   ) {
     periods.push({
       weekStart,
-      weekEnd: addDays(weekStart, 6),
+      weekEnd: addDays(weekStart, 4),
       reservationFrom: weekStart < startDate ? startDate : weekStart,
     })
   }

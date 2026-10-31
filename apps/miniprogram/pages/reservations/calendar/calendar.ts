@@ -7,6 +7,8 @@ import type {
   ReservationDaySubmission,
 } from '@egg-booking/contracts'
 import { ApiError, apiRequest, resolveApiUrl } from '../../../services/api'
+import { createShareAppMessage } from '../../../services/share'
+import { getCachedUser } from '../../../services/auth'
 
 type DayState =
   | 'empty'
@@ -50,7 +52,6 @@ interface DayMemberView extends ReservationDayMember {
 }
 
 const weekdayLabels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-const quantityOptions = [0, 1, 2, 3, 4, 5]
 
 function formatDate(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
@@ -89,8 +90,12 @@ function enumerateDates(from: Date, to: Date): string[] {
 }
 
 Page({
+  onShareAppMessage: createShareAppMessage,
+
   data: {
     initialized: false,
+    isAdmin: false,
+    currentUserId: '',
     loading: true,
     today: '',
     bookingEnd: '',
@@ -105,13 +110,13 @@ Page({
     selectedDateLabel: '',
     items: [] as ReservationDayView[],
     calendarCells: [] as CalendarCell[],
-    quantityOptions,
 
     dayDetailsLoading: false,
     dayDetailsError: '',
     dayDetailsTotalEggs: 0,
     dayDetailsFilledCount: 0,
     dayDetailsUnsubmittedCount: 0,
+    canAdjustActual: false,
     dayDetailItems: [] as DaySubmissionView[],
     dayUnsubmittedItems: [] as DayMemberView[],
 
@@ -121,7 +126,6 @@ Page({
     selectedDayReadonlyText: '',
     originalQuantity: null as number | null,
     draftQuantity: null as number | null,
-    showQuantityOptions: false,
     dayCanSubmit: false,
     daySaving: false,
 
@@ -137,6 +141,8 @@ Page({
     const maxMonthDate = addMonths(monthStart(now.getFullYear(), now.getMonth()), 1)
     this.setData({
       initialized: true,
+      isAdmin: getCachedUser()?.isAdmin === true,
+      currentUserId: getCachedUser()?.id ?? '',
       today: formatDate(now),
       bookingEnd: formatDate(end),
       bookingEndLabel: `${end.getMonth() + 1}月${end.getDate()}日`,
@@ -317,13 +323,13 @@ Page({
     const item = this.data.selectedDay
     if (!item?.canEdit) return
     const originalQuantity = item.reservation?.status === 'active' ? item.reservation.quantity : null
+    const draftQuantity = originalQuantity ?? 1
     this.setTabBarHidden(true)
     this.setData({
       dayPanelOpen: true,
       originalQuantity,
-      draftQuantity: originalQuantity,
-      showQuantityOptions: false,
-      dayCanSubmit: false,
+      draftQuantity,
+        dayCanSubmit: draftQuantity !== originalQuantity,
     })
   },
 
@@ -336,6 +342,7 @@ Page({
       if (this.data.selectedDate !== date) return
       this.setData({
         dayDetailsLoading: false,
+        canAdjustActual: date <= this.data.today && (result as ReservationDayDetailsBody & { billingGenerated?: boolean }).billingGenerated !== true,
         dayDetailsTotalEggs: result.totalEggs,
         dayDetailsFilledCount: result.filledMemberCount,
         dayDetailsUnsubmittedCount: result.unsubmittedMemberCount,
@@ -367,7 +374,7 @@ Page({
   closeDayPanel() {
     if (this.data.daySaving) return
     this.setTabBarHidden(false)
-    this.setData({ dayPanelOpen: false, showQuantityOptions: false })
+    this.setData({ dayPanelOpen: false })
   },
 
   setTabBarHidden(hidden: boolean) {
@@ -392,20 +399,60 @@ Page({
     this.updateDraftQuantity(Math.max(0, Math.min(5, base + delta)))
   },
 
-  toggleQuantityOptions() {
-    if (!this.data.selectedDay?.canEdit) return
-    this.setData({ showQuantityOptions: !this.data.showQuantityOptions })
-  },
-
-  chooseQuantity(event: WechatMiniprogram.TouchEvent) {
-    this.updateDraftQuantity(Number(event.currentTarget.dataset.quantity))
-    this.setData({ showQuantityOptions: false })
-  },
-
   updateDraftQuantity(quantity: number) {
     this.setData({
       draftQuantity: quantity,
       dayCanSubmit: quantity !== this.data.originalQuantity,
+    })
+  },
+
+  requestActualQuantity() {
+    const date = this.data.selectedDay?.date
+    if (!date) return
+    wx.showModal({
+      title: '申请实际数量',
+      editable: true,
+      placeholderText: '请输入 0～5',
+      success: async (result) => {
+        if (!result.confirm) return
+        const quantity = Number(result.content)
+        if (!Number.isInteger(quantity) || quantity < 0 || quantity > 5) {
+          wx.showToast({ title: '请输入 0～5 的整数', icon: 'none' })
+          return
+        }
+        try {
+          await apiRequest({ path: `/api/v1/actual-quantities/${date}/request`, method: 'POST', data: { quantity } })
+          wx.showToast({ title: '申请已提交', icon: 'success' })
+        } catch (error) {
+          wx.showToast({ title: error instanceof Error ? error.message : '提交失败', icon: 'none' })
+        }
+      },
+    })
+  },
+
+  adminAdjustActualQuantity(event: WechatMiniprogram.TouchEvent) {
+    const date = this.data.selectedDate
+    const memberId = String(event.currentTarget.dataset.memberId ?? '')
+    if (!date || !memberId) return
+    wx.showModal({
+      title: '调整实际数量',
+      editable: true,
+      placeholderText: '请输入 0～5',
+      success: async (result) => {
+        if (!result.confirm) return
+        const quantity = Number(result.content)
+        if (!Number.isInteger(quantity) || quantity < 0 || quantity > 5) {
+          wx.showToast({ title: '请输入 0～5 的整数', icon: 'none' })
+          return
+        }
+        try {
+          await apiRequest({ path: `/api/v1/admin/actual-quantities/${date}/members/${memberId}`, method: 'POST', data: { quantity } })
+          wx.showToast({ title: '已调整', icon: 'success' })
+          void this.loadDayDetails(date)
+        } catch (error) {
+          wx.showToast({ title: error instanceof Error ? error.message : '调整失败', icon: 'none' })
+        }
+      },
     })
   },
 
@@ -428,7 +475,6 @@ Page({
         selectedDay: updated,
         selectedDayLabel: `${updated.date.slice(5).replace('-', '月')}日 · ${updated.weekday}`,
         dayPanelOpen: false,
-        showQuantityOptions: false,
       })
       this.setTabBarHidden(false)
       void this.loadDayDetails(updated.date)

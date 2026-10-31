@@ -1,6 +1,7 @@
 import type { Db } from 'mongodb'
 import type {
   AuditLogDocument,
+  ActualQuantityRequestDocument,
   BillDocument,
   BillingRunDocument,
   IdempotencyKeyDocument,
@@ -18,6 +19,7 @@ export function collections(db: Db) {
     auditLogs: db.collection<AuditLogDocument>('audit_logs'),
     mealDayOverrides: db.collection<MealDayOverrideDocument>('meal_day_overrides'),
     reservations: db.collection<ReservationDocument>('reservations'),
+    actualQuantityRequests: db.collection<ActualQuantityRequestDocument>('actual_quantity_requests'),
     bills: db.collection<BillDocument>('bills'),
     billingRuns: db.collection<BillingRunDocument>('billing_runs'),
     notifications: db.collection<NotificationDocument>('notifications'),

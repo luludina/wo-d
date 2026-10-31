@@ -10,6 +10,7 @@ import type {
 import { bootstrapSession, isManuallyLoggedOut } from '../../services/auth'
 import { apiRequest } from '../../services/api'
 import { formatChinaMonthDayTime } from '../../utils/date-time'
+import { createShareAppMessage, createTimelineShare } from '../../services/share'
 
 type TodayState = 'loading' | 'open' | 'closed' | 'unreserved' | 'reserved' | 'zero' | 'locked' | 'cancelled' | 'error'
 
@@ -33,13 +34,16 @@ function formatMonthDay(value: string): string {
 }
 
 function notificationIcon(type: string): string {
-  if (type === 'bill_generated') return '单'
+  if (type === 'bill_generated' || type === 'bill_adjusted') return '单'
   if (type.startsWith('meal_day_')) return '日'
   if (type.startsWith('member_')) return '员'
   return '铃'
 }
 
 Page({
+  onShareAppMessage: createShareAppMessage,
+  onShareTimeline: createTimelineShare,
+
   data: {
     state: 'loading' as 'loading' | 'loggedOut' | 'ready' | 'error',
     errorMessage: '',
@@ -330,6 +334,10 @@ Page({
 
   openReservations() {
     void wx.switchTab({ url: '/pages/reservations/calendar/calendar' })
+  },
+
+  openActualQuantities() {
+    void wx.navigateTo({ url: '/pages/admin/actual-quantities/actual-quantities' })
   },
 
   syncTabBarSelection() {

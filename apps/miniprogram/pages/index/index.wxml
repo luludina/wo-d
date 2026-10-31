@@ -71,6 +71,9 @@
     </block>
 
     <block wx:else>
+      <view class="calendar-entry-row">
+        <view class="calendar-entry" bindtap="openActualQuantities" role="button"><text>实际数量审批</text><text>›</text></view>
+      </view>
       <view class="admin-today-card card">
         <view class="today-kicker">今天 · {{adminTodayDate}}</view>
         <view wx:if="{{adminTodayLoading}}" class="today-loading">正在读取今日汇总...</view>

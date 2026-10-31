@@ -5,6 +5,7 @@ import type {
   MealDayStatus,
 } from '@egg-booking/contracts'
 import { apiRequest } from '../../../services/api'
+import { createShareAppMessage } from '../../../services/share'
 
 interface MealDayView extends MealDayItem {
   weekday: string
@@ -19,9 +20,7 @@ interface CalendarCell {
   relation: 'previous' | 'current' | 'next'
   inCurrentMonth: boolean
   isToday: boolean
-  isRangeStart: boolean
-  isRangeEnd: boolean
-  isInRange: boolean
+  isSelected: boolean
   canSelect: boolean
   status: MealDayStatus | ''
   source: MealDayItem['source'] | ''
@@ -54,11 +53,6 @@ function monthEnd(year: number, month: number): Date {
   return new Date(year, month + 1, 0)
 }
 
-function rollingMonthEnd(date: Date): Date {
-  const lastDay = new Date(date.getFullYear(), date.getMonth() + 2, 0).getDate()
-  return new Date(date.getFullYear(), date.getMonth() + 1, Math.min(date.getDate(), lastDay))
-}
-
 function formatShortDate(value: string): string {
   if (!value) return '请选择'
   const date = parseLocalDate(value)
@@ -70,32 +64,24 @@ function createIdempotencyKey(): string {
 }
 
 Page({
+  onShareAppMessage: createShareAppMessage,
+
   data: {
     initialized: false,
     today: '',
-    bookingEnd: '',
-    from: '',
-    to: '',
-    fromLabel: '',
-    toLabel: '',
+    selectedDate: '',
+    selectedDateLabel: '',
     reason: '',
 
     currentYear: 0,
     currentMonth: 0,
     currentMonthLabel: '',
-    maxYear: 0,
-    maxMonth: 0,
-    canNavigateNext: true,
     items: [] as MealDayView[],
     calendarCells: [] as CalendarCell[],
     loading: true,
 
-    rangeLoading: false,
-    rangeComplete: true,
-    rangeDayCount: 1,
-    rangeOpenCount: 0,
-    rangeClosedCount: 0,
-    rangeSummaryText: '正在读取日期状态...',
+    selectedDateLoading: false,
+    selectedDateLoaded: false,
     singleStatusText: '',
     singleSourceText: '',
     singleReasonText: '',
@@ -111,24 +97,16 @@ Page({
 
   onLoad() {
     const now = new Date()
-    const tomorrow = addDays(now, 1)
-    const end = rollingMonthEnd(now)
-    const initialMonth = monthStart(tomorrow.getFullYear(), tomorrow.getMonth())
-    const initialDate = formatDate(tomorrow)
+    const initialMonth = monthStart(now.getFullYear(), now.getMonth())
+    const initialDate = formatDate(now)
     this.setData({
       initialized: true,
-      today: formatDate(now),
-      bookingEnd: formatDate(end),
-      from: initialDate,
-      to: initialDate,
-      fromLabel: formatShortDate(initialDate),
-      toLabel: formatShortDate(initialDate),
+      today: initialDate,
+      selectedDate: initialDate,
+      selectedDateLabel: formatShortDate(initialDate),
       currentYear: initialMonth.getFullYear(),
       currentMonth: initialMonth.getMonth(),
       currentMonthLabel: `${initialMonth.getFullYear()}年${initialMonth.getMonth() + 1}月`,
-      maxYear: end.getFullYear(),
-      maxMonth: end.getMonth(),
-      canNavigateNext: initialMonth.getFullYear() * 12 + initialMonth.getMonth() < end.getFullYear() * 12 + end.getMonth(),
     })
     this.updateActionAvailability()
   },
@@ -136,6 +114,7 @@ Page({
   onShow() {
     this.syncTabBarSelection()
     this.setTabBarHidden(false)
+    this.updateActionAvailability()
     if (this.data.initialized) void this.refreshPage()
   },
 
@@ -144,7 +123,7 @@ Page({
   },
 
   async refreshPage() {
-    await Promise.all([this.loadCalendar(), this.loadRangeSummary()])
+    await Promise.all([this.loadCalendar(), this.loadSelectedDate()])
   },
 
   async loadCalendar() {
@@ -171,15 +150,11 @@ Page({
     }
   },
 
-  async loadRangeSummary() {
-    if (!this.data.from || !this.data.to) {
+  async loadSelectedDate() {
+    if (!this.data.selectedDate) {
       this.setData({
-        rangeLoading: false,
-        rangeComplete: false,
-        rangeDayCount: 0,
-        rangeOpenCount: 0,
-        rangeClosedCount: 0,
-        rangeSummaryText: '请选择结束日期',
+        selectedDateLoading: false,
+        selectedDateLoaded: false,
         singleStatusText: '',
         singleSourceText: '',
         singleReasonText: '',
@@ -188,40 +163,32 @@ Page({
       return
     }
 
-    const requestedFrom = this.data.from
-    const requestedTo = this.data.to
-    this.setData({ rangeLoading: true, rangeSummaryText: '正在读取日期状态...' })
+    const requestedDate = this.data.selectedDate
+    this.setData({ selectedDateLoading: true, selectedDateLoaded: false })
     try {
       const result = await apiRequest<MealDayListBody>({
-        path: `/api/v1/admin/meal-days?from=${requestedFrom}&to=${requestedTo}`,
+        path: `/api/v1/admin/meal-days?from=${requestedDate}&to=${requestedDate}`,
       })
-      if (requestedFrom !== this.data.from || requestedTo !== this.data.to) return
-      const views = result.items.map((item) => this.toView(item))
-      const openCount = views.filter((item) => item.status === 'open').length
-      const closedCount = views.length - openCount
-      const single = views.length === 1 ? views[0]! : null
+      if (requestedDate !== this.data.selectedDate) return
+      const selected = result.items[0] ? this.toView(result.items[0]) : null
       this.setData({
-        rangeComplete: true,
-        rangeDayCount: views.length,
-        rangeOpenCount: openCount,
-        rangeClosedCount: closedCount,
-        rangeSummaryText: `已选 ${views.length} 天 · 当前开放 ${openCount} 天 · 当前关闭 ${closedCount} 天`,
-        singleStatusText: single?.statusLabel ?? '',
-        singleSourceText: single?.sourceLabel ?? '',
-        singleReasonText: single?.reason ?? '',
+        selectedDateLoaded: Boolean(selected),
+        singleStatusText: selected?.statusLabel ?? '',
+        singleSourceText: selected?.sourceLabel ?? '',
+        singleReasonText: selected?.reason ?? '',
       })
     } catch (error) {
-      if (requestedFrom !== this.data.from || requestedTo !== this.data.to) return
+      if (requestedDate !== this.data.selectedDate) return
       this.setData({
-        rangeComplete: false,
-        rangeSummaryText: error instanceof Error ? error.message : '日期状态加载失败',
+        selectedDateLoaded: false,
         singleStatusText: '',
         singleSourceText: '',
         singleReasonText: '',
       })
+      wx.showToast({ title: error instanceof Error ? error.message : '日期状态加载失败', icon: 'none' })
     } finally {
-      if (requestedFrom === this.data.from && requestedTo === this.data.to) {
-        this.setData({ rangeLoading: false })
+      if (requestedDate === this.data.selectedDate) {
+        this.setData({ selectedDateLoading: false })
         this.updateActionAvailability()
       }
     }
@@ -242,7 +209,6 @@ Page({
     const gridStart = addDays(first, -mondayOffset)
     const itemMap = new Map(items.map((item) => [item.date, item]))
     const currentMonthKey = this.data.currentYear * 12 + this.data.currentMonth
-    const maxMonthKey = this.data.maxYear * 12 + this.data.maxMonth
 
     return Array.from({ length: 42 }, (_, index) => {
       const date = addDays(gridStart, index)
@@ -250,9 +216,6 @@ Page({
       const dateMonthKey = date.getFullYear() * 12 + date.getMonth()
       const relation = dateMonthKey < currentMonthKey ? 'previous' : dateMonthKey > currentMonthKey ? 'next' : 'current'
       const item = itemMap.get(dateValue)
-      const waitingForEnd = Boolean(this.data.from && !this.data.to)
-      const beforeRangeStart = waitingForEnd && dateValue < this.data.from
-      const beyondWindow = dateValue > this.data.bookingEnd
       return {
         key: `${dateValue}-${index}`,
         date: dateValue,
@@ -260,10 +223,8 @@ Page({
         relation,
         inCurrentMonth: relation === 'current',
         isToday: dateValue === this.data.today,
-        isRangeStart: dateValue === this.data.from,
-        isRangeEnd: Boolean(this.data.to) && dateValue === this.data.to,
-        isInRange: Boolean(this.data.from && this.data.to && dateValue >= this.data.from && dateValue <= this.data.to),
-        canSelect: dateMonthKey <= maxMonthKey && !beyondWindow && !beforeRangeStart,
+        isSelected: dateValue === this.data.selectedDate,
+        canSelect: true,
         status: item?.status ?? '',
         source: item?.source ?? '',
       }
@@ -271,35 +232,27 @@ Page({
   },
 
   updateActionAvailability() {
-    const complete = Boolean(this.data.from && this.data.to && this.data.rangeComplete)
-    const inWindow = complete && this.data.from >= this.data.today && this.data.to <= this.data.bookingEnd
+    const canApply = Boolean(this.data.selectedDateLoaded && this.data.selectedDate)
     this.setData({
-      canOpen: inWindow,
-      canClose: inWindow && this.data.from > this.data.today,
+      canOpen: canApply,
+      canClose: canApply,
       calendarCells: this.buildCalendarCells(this.data.items),
     })
   },
 
-  async changeStartDate(event: WechatMiniprogram.CustomEvent<{ value: string }>) {
+  async changeSelectedDate(event: WechatMiniprogram.CustomEvent<{ value: string }>) {
     const date = event.detail.value
     this.setData({
-      from: date,
-      to: '',
-      fromLabel: formatShortDate(date),
-      toLabel: '请选择',
-      rangeComplete: false,
+      selectedDate: date,
+      selectedDateLabel: formatShortDate(date),
+      selectedDateLoaded: false,
+      singleStatusText: '',
+      singleSourceText: '',
+      singleReasonText: '',
     })
     this.updateActionAvailability()
     await this.showMonthContaining(date)
-    await this.loadRangeSummary()
-  },
-
-  async changeEndDate(event: WechatMiniprogram.CustomEvent<{ value: string }>) {
-    const date = event.detail.value
-    if (!this.data.from || date < this.data.from) return
-    this.setData({ to: date, toLabel: formatShortDate(date) })
-    await this.showMonthContaining(date)
-    await this.loadRangeSummary()
+    await this.loadSelectedDate()
   },
 
   changeReason(event: WechatMiniprogram.Input) {
@@ -311,27 +264,20 @@ Page({
   },
 
   nextMonth() {
-    if (!this.data.canNavigateNext) return
     void this.changeMonth(1)
   },
 
   async changeMonth(offset: number) {
     const target = addMonths(monthStart(this.data.currentYear, this.data.currentMonth), offset)
-    const targetKey = target.getFullYear() * 12 + target.getMonth()
-    const maxKey = this.data.maxYear * 12 + this.data.maxMonth
-    if (targetKey > maxKey) return
     this.setMonth(target)
     await this.loadCalendar()
   },
 
   setMonth(target: Date) {
-    const targetKey = target.getFullYear() * 12 + target.getMonth()
-    const maxKey = this.data.maxYear * 12 + this.data.maxMonth
     this.setData({
       currentYear: target.getFullYear(),
       currentMonth: target.getMonth(),
       currentMonthLabel: `${target.getFullYear()}年${target.getMonth() + 1}月`,
-      canNavigateNext: targetKey < maxKey,
     })
   },
 
@@ -354,41 +300,24 @@ Page({
   },
 
   async applyCalendarSelection(date: string) {
-    if (date < this.data.today) {
-      this.setData({
-        from: date,
-        to: date,
-        fromLabel: formatShortDate(date),
-        toLabel: formatShortDate(date),
-      })
-    } else if (this.data.to || !this.data.from) {
-      this.setData({
-        from: date,
-        to: '',
-        fromLabel: formatShortDate(date),
-        toLabel: '请选择',
-        rangeComplete: false,
-      })
-    } else {
-      if (date < this.data.from) return
-      this.setData({ to: date, toLabel: formatShortDate(date) })
-    }
-
+    this.setData({
+      selectedDate: date,
+      selectedDateLabel: formatShortDate(date),
+      selectedDateLoaded: false,
+      singleStatusText: '',
+      singleSourceText: '',
+      singleReasonText: '',
+    })
     this.updateActionAvailability()
     await this.showMonthContaining(date)
-    await this.loadRangeSummary()
+    await this.loadSelectedDate()
   },
 
   applyStatus(event: WechatMiniprogram.TouchEvent) {
     const status = event.currentTarget.dataset.status as MealDayStatus
     const allowed = status === 'open' ? this.data.canOpen : this.data.canClose
     if (!allowed || this.data.applying) {
-      const title = !this.data.to
-        ? '请先选择结束日期'
-        : status === 'closed' && this.data.from <= this.data.today
-          ? '关闭供餐最早只能从明天开始'
-          : '所选日期不可操作'
-      wx.showToast({ title, icon: 'none' })
+      wx.showToast({ title: '请选择可操作日期', icon: 'none' })
       return
     }
     void this.previewAction(status)
@@ -401,8 +330,8 @@ Page({
         path: '/api/v1/admin/meal-days/batch/preview',
         method: 'POST',
         data: {
-          from: this.data.from,
-          to: this.data.to,
+          from: this.data.selectedDate,
+          to: this.data.selectedDate,
           status,
           ...(this.data.reason.trim() ? { reason: this.data.reason.trim() } : {}),
         },
@@ -457,8 +386,8 @@ Page({
       method: 'POST',
       headers: { 'Idempotency-Key': createIdempotencyKey() },
       data: {
-        from: this.data.from,
-        to: this.data.to,
+        from: this.data.selectedDate,
+        to: this.data.selectedDate,
         status,
         ...(this.data.reason.trim() ? { reason: this.data.reason.trim() } : {}),
         previewToken: preview.previewToken,

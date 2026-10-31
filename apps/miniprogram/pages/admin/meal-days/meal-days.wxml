@@ -9,28 +9,14 @@
       <view class="section-title">设置日期</view>
     </view>
 
-    <view class="date-range-row">
-      <picker class="date-picker" mode="date" value="{{from}}" start="{{today}}" end="{{bookingEnd}}" bindchange="changeStartDate">
-        <view class="date-field">
-          <text class="field-label">开始日期</text>
-          <view class="field-value-row"><text class="date-value">{{fromLabel}}</text><text class="field-arrow">›</text></view>
-        </view>
-      </picker>
-      <view class="range-divider">至</view>
-      <picker class="date-picker" mode="date" value="{{to || from}}" start="{{from}}" end="{{bookingEnd}}" disabled="{{!from}}" bindchange="changeEndDate">
-        <view class="date-field {{!to ? 'date-field-empty' : ''}}">
-          <text class="field-label">结束日期</text>
-          <view class="field-value-row"><text class="date-value">{{toLabel}}</text><text class="field-arrow">›</text></view>
-        </view>
-      </picker>
-    </view>
+    <picker class="selected-date-picker" mode="date" value="{{selectedDate}}" bindchange="changeSelectedDate">
+      <view class="date-field">
+        <text class="field-label">操作日期</text>
+        <view class="field-value-row"><text class="date-value">{{selectedDateLabel}}</text><text class="field-arrow">›</text></view>
+      </view>
+    </picker>
 
-    <view class="range-summary">
-      <view class="summary-icon">✓</view>
-      <text>{{rangeSummaryText}}</text>
-    </view>
-
-    <view wx:if="{{from === to && singleStatusText}}" class="single-detail">
+    <view wx:if="{{singleStatusText}}" class="single-detail">
       <view class="single-main">
         <text class="status-dot status-{{singleStatusText === '开放' ? 'open' : 'closed'}}"></text>
         <text>{{singleStatusText}}</text>
@@ -64,7 +50,7 @@
     <view class="month-toolbar">
       <view class="month-button" bindtap="previousMonth" hover-class="icon-button-hover" role="button" aria-label="上一个月"><text class="month-arrow">‹</text></view>
       <view class="month-label">{{currentMonthLabel}}</view>
-      <view class="month-button {{!canNavigateNext ? 'month-button-disabled' : ''}}" bindtap="nextMonth" hover-class="icon-button-hover" role="button" aria-label="下一个月"><text class="month-arrow">›</text></view>
+      <view class="month-button" bindtap="nextMonth" hover-class="icon-button-hover" role="button" aria-label="下一个月"><text class="month-arrow">›</text></view>
     </view>
 
     <view class="weekday-grid">
@@ -82,7 +68,7 @@
       <view
         wx:for="{{calendarCells}}"
         wx:key="key"
-        class="calendar-cell relation-{{item.relation}} {{item.isToday ? 'is-today' : ''}} {{item.isInRange ? 'is-in-range' : ''}} {{item.isRangeStart ? 'is-range-start' : ''}} {{item.isRangeEnd ? 'is-range-end' : ''}} {{!item.canSelect ? 'is-disabled' : ''}}"
+        class="calendar-cell relation-{{item.relation}} {{item.isToday ? 'is-today' : ''}} {{item.isSelected ? 'is-selected' : ''}} {{!item.canSelect ? 'is-disabled' : ''}}"
         data-date="{{item.date}}"
         data-can-select="{{item.canSelect}}"
         bindtap="selectCalendarDay"
@@ -109,9 +95,8 @@
     <view class="sheet-handle"></view>
     <view class="confirm-icon">!</view>
     <view class="confirm-title">确认关闭供餐</view>
-    <view class="confirm-range">{{fromLabel}} 至 {{toLabel}}</view>
+    <view class="confirm-range">{{selectedDateLabel}}</view>
     <view class="impact-grid">
-      <view class="impact-item"><text class="impact-value">{{pendingPreview.changedDateCount}}</text><text class="impact-label">关闭天数</text></view>
       <view class="impact-item"><text class="impact-value">{{pendingPreview.cancelledReservationCount}}</text><text class="impact-label">取消预约</text></view>
       <view class="impact-item"><text class="impact-value">{{pendingPreview.cancelledEggCount}}</text><text class="impact-label">涉及鸡蛋</text></view>
       <view class="impact-item"><text class="impact-value">{{pendingPreview.affectedMemberCount}}</text><text class="impact-label">影响成员</text></view>

@@ -3,17 +3,21 @@
   <view wx:elif="{{errorMessage}}" class="state-block state-error">{{errorMessage}}</view>
   <block wx:else>
     <view class="summary-card">
-      <view class="summary-period">{{periodText}}</view>
+      <view class="summary-period-row">
+        <view class="summary-period">{{periodText}}</view>
+        <view class="summary-status {{isDraft ? 'summary-status-draft' : 'summary-status-published'}}">{{statusText}}</view>
+      </view>
       <view class="summary-label">应收合计</view>
       <view class="summary-amount"><text class="summary-currency">¥</text>{{amountText}}</view>
       <view class="summary-metrics">
         <view><text>{{memberCount}}</text> 位成员</view>
-        <view class="summary-divider"></view>
-        <view><text>{{totalQuantity}}</text> 个鸡蛋</view>
       </view>
     </view>
 
-    <button class="copy-button" bindtap="copyCollectionList" loading="{{copying}}" disabled="{{copying}}">复制群收款清单</button>
+    <view class="bill-actions">
+      <button class="copy-button" bindtap="copyCollectionList" loading="{{copying}}" disabled="{{copying}}">复制收款清单</button>
+      <button class="publish-button" bindtap="publishBill" loading="{{pushing}}" disabled="{{!isDraft || pushing}}">{{isDraft ? '推送账单' : '已推送'}}</button>
+    </view>
 
     <view class="detail-section">
       <view class="section-heading">
@@ -24,11 +28,67 @@
         <view wx:for="{{items}}" wx:key="memberId" class="member-row">
           <image wx:if="{{item.avatarDisplayUrl}}" class="member-avatar" src="{{item.avatarDisplayUrl}}" mode="aspectFill" />
           <view wx:else class="member-avatar avatar-placeholder">{{item.avatarText}}</view>
-          <view class="member-name">{{item.nickname}}</view>
-          <view class="member-eggs">{{item.totalQuantity}} 个</view>
-          <view class="member-amount">¥{{item.amountText}}</view>
+          <view class="member-copy">
+            <view class="member-name-row">
+              <view class="member-name">{{item.realName}}</view>
+              <view wx:if="{{item.isAdjusted}}" class="adjusted-badge">已调整</view>
+            </view>
+            <view wx:if="{{item.isAdjusted}}" class="adjustment-note">调整原因：{{item.adjustmentReason}}</view>
+          </view>
+          <view class="member-end">
+            <view class="member-amount">¥{{item.amountText}}</view>
+            <button class="member-adjust-button" data-bill-id="{{item.billId}}" bindtap="openAdjustment" aria-label="调整{{item.realName}}的账单">
+              <image src="/assets/icons/profile/edit.svg" mode="aspectFit" />
+            </button>
+          </view>
         </view>
       </view>
     </view>
   </block>
+
+  <view wx:if="{{adjustmentOpen}}" class="modal-backdrop" catchtap="closeAdjustment">
+    <view class="adjustment-panel" catchtap="noop">
+      <view class="sheet-handle"></view>
+      <view class="adjustment-header">
+        <view class="adjustment-heading">
+          <view class="adjustment-title">调整账单</view>
+          <view class="adjustment-member-row">
+            <view class="member-dot"></view>
+            <view class="adjustment-member">{{adjustmentMemberName}}</view>
+            <view class="current-quantity">当前 {{adjustmentCurrentQuantity}} 个</view>
+          </view>
+        </view>
+        <view class="modal-close" bindtap="closeAdjustment" hover-class="modal-close-hover" role="button" aria-label="关闭">×</view>
+      </view>
+
+      <view class="quantity-section">
+        <view class="field-heading">
+          <view class="form-label">最终鸡蛋数量</view>
+          <view class="amount-preview">应收 <text>¥{{adjustmentQuantity}}</text></view>
+        </view>
+        <view class="quantity-stepper">
+          <view class="quantity-button {{adjustmentQuantity <= 0 ? 'quantity-button-disabled' : ''}}" data-delta="-1" bindtap="adjustQuantity" role="button" aria-disabled="{{adjustmentQuantity <= 0}}">−</view>
+          <view class="quantity-value-wrap">
+            <input class="quantity-input" type="number" value="{{adjustmentQuantity}}" bindinput="inputAdjustmentQuantity" />
+            <text class="quantity-unit">个</text>
+          </view>
+          <view class="quantity-button {{adjustmentQuantity >= 100 ? 'quantity-button-disabled' : ''}}" data-delta="1" bindtap="adjustQuantity" role="button" aria-disabled="{{adjustmentQuantity >= 100}}">＋</view>
+        </view>
+      </view>
+
+      <view class="reason-section">
+        <view class="field-heading">
+          <view class="form-label">调整原因</view>
+          <view class="required-label">必填</view>
+        </view>
+        <textarea class="reason-input" maxlength="300" value="{{adjustmentReason}}" bindinput="inputAdjustmentReason" placeholder="填写本次调整原因" placeholder-class="reason-placeholder" cursor-spacing="24" />
+        <view class="reason-tip">{{isDraft ? '调整结果将在手动或18:00定时推送时生效' : '提交后将通知该成员'}}</view>
+      </view>
+
+      <view class="adjustment-actions">
+        <view class="cancel-button" bindtap="closeAdjustment" role="button" aria-disabled="{{adjustmentSaving}}">取消</view>
+        <button class="save-button" bindtap="submitAdjustment" loading="{{adjustmentSaving}}" disabled="{{adjustmentSaving}}">确认调整</button>
+      </view>
+    </view>
+  </view>
 </view>

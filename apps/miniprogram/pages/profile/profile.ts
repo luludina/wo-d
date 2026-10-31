@@ -1,8 +1,11 @@
 import type { CurrentUser } from '@egg-booking/contracts'
 import { apiRequest, resolveApiUrl } from '../../services/api'
 import { getCurrentUser, logoutCurrentSession } from '../../services/auth'
+import { createShareAppMessage } from '../../services/share'
 
 Page({
+  onShareAppMessage: createShareAppMessage,
+
   data: {
     loading: true,
     saving: false,

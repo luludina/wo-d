@@ -49,8 +49,23 @@ export interface ReservationDocument {
   memberId: ObjectId
   date: string
   quantity: number
+  actualQuantity?: number
   status: ReservationStatus
   cancelledReason?: 'meal_day_closed' | 'member_disabled'
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ActualQuantityRequestDocument {
+  _id: ObjectId
+  memberId: ObjectId
+  date: string
+  quantity: number
+  reason?: string
+  status: 'pending' | 'approved' | 'rejected' | 'superseded'
+  reviewedQuantity?: number
+  reviewedBy?: ObjectId
+  reviewReason?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -82,6 +97,13 @@ export interface BillDocument {
   totalQuantity: number
   unitPriceFen: number
   totalAmountFen: number
+  adjustedTotalQuantity?: number
+  adjustedTotalAmountFen?: number
+  adjustmentReason?: string
+  adjustedBy?: ObjectId
+  adjustedAt?: Date
+  status?: 'draft' | 'published'
+  publishedAt?: Date
   generatedAt: Date
   createdAt: Date
 }
@@ -92,6 +114,8 @@ export interface BillingRunDocument {
   billCount: number
   totalQuantity: number
   totalAmountFen: number
+  status?: 'draft' | 'published'
+  publishedAt?: Date
   generatedAt: Date
 }
 

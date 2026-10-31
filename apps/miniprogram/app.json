@@ -12,6 +12,7 @@
     "pages/notifications/notifications",
     "pages/admin/bills/list/list",
     "pages/admin/bills/detail/detail",
+    "pages/admin/actual-quantities/actual-quantities",
     "pages/bills/list/list",
     "pages/bills/detail/detail"
   ],

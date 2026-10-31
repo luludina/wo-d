@@ -1,6 +1,7 @@
 import type { NotificationListBody, NotificationView } from '@egg-booking/contracts'
 import { apiRequest } from '../../services/api'
 import { formatChinaMonthDayTime } from '../../utils/date-time'
+import { createShareAppMessage } from '../../services/share'
 
 interface NotificationRow extends NotificationView {
   icon: string
@@ -10,13 +11,15 @@ interface NotificationRow extends NotificationView {
 const PAGE_SIZE = 20
 
 function getIcon(type: string): string {
-  if (type === 'bill_generated') return '单'
+  if (type === 'bill_generated' || type === 'bill_adjusted') return '单'
   if (type.startsWith('meal_day_')) return '日'
   if (type.startsWith('member_')) return '员'
   return '铃'
 }
 
 Page({
+  onShareAppMessage: createShareAppMessage,
+
   data: {
     loading: true,
     loadingMore: false,

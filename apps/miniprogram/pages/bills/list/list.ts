@@ -1,6 +1,7 @@
 import type { BillListBody, BillSummary } from '@egg-booking/contracts'
 import { apiRequest } from '../../../services/api'
 import { formatChinaDate } from '../../../utils/date-time'
+import { createShareAppMessage } from '../../../services/share'
 
 interface BillRow extends BillSummary {
   periodText: string
@@ -18,6 +19,8 @@ function formatAmount(amountFen: number): string {
 }
 
 Page({
+  onShareAppMessage: createShareAppMessage,
+
   data: {
     loading: true,
     items: [] as BillRow[],

@@ -39,26 +39,26 @@ describe('business date rules', () => {
     expect(getDefaultMealDayStatus('2026-10-04')).toBe('closed')
   })
 
-  it('validates real dates, range order, and meal-day window', () => {
+  it('validates real dates and range order while allowing any meal-day date', () => {
     expect(() => parseBusinessDate('2026-02-30')).toThrow('日期不存在')
     expect(() => enumerateBusinessDates('2026-10-02', '2026-10-01')).toThrow(
       '开始日期不能晚于结束日期',
     )
     expect(() =>
-      assertMealDayWindow('2026-09-27', '2026-09-28', new Date('2026-09-28T00:00:00+08:00')),
-    ).toThrow('只能设置')
+      assertMealDayWindow('2020-01-01', '2020-01-01'),
+    ).not.toThrow()
     expect(() =>
-      assertMealDayWindow('2026-10-29', '2026-10-29', new Date('2026-09-28T00:00:00+08:00')),
-    ).toThrow('只能设置')
+      assertMealDayWindow('2035-12-31', '2035-12-31'),
+    ).not.toThrow()
   })
 
-  it('allows opening today but only allows closing from tomorrow', () => {
-    const now = new Date('2026-09-28T18:00:00+08:00')
-    expect(() => assertMealDayActionWindow('2026-09-28', '2026-09-28', 'open', now)).not.toThrow()
-    expect(() => assertMealDayActionWindow('2026-09-28', '2026-09-28', 'closed', now)).toThrow(
-      '关闭供餐最早只能从明天开始',
-    )
-    expect(() => assertMealDayActionWindow('2026-09-29', '2026-09-29', 'closed', now)).not.toThrow()
+  it('allows changing today at any time', () => {
+    expect(() =>
+      assertMealDayActionWindow('2026-09-28', '2026-09-28'),
+    ).not.toThrow()
+    expect(() =>
+      assertMealDayActionWindow('2026-09-29', '2026-09-29'),
+    ).not.toThrow()
   })
 
   it('allows historical calendar reads but limits writes to one rolling month', () => {

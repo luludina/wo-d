@@ -14,6 +14,7 @@ import { reservationRoutes } from './routes/reservations.js'
 import { dashboardRoutes } from './routes/dashboard.js'
 import { notificationRoutes } from './routes/notifications.js'
 import { billRoutes } from './routes/bills.js'
+import { actualQuantityRoutes } from './routes/actual-quantities.js'
 
 export interface BuildAppOptions {
   logger?: FastifyServerOptions['logger']
@@ -54,7 +55,8 @@ export function buildApp(options: BuildAppOptions = {}) {
     app.register(reservationRoutes)
     app.register(dashboardRoutes, { billingStartDate: options.billingStartDate ?? '2026-10-09' })
     app.register(notificationRoutes)
-    app.register(billRoutes)
+    app.register(billRoutes, { billingStartDate: options.billingStartDate ?? '2026-10-09' })
+    app.register(actualQuantityRoutes, { billingStartDate: options.billingStartDate ?? '2026-10-09' })
     if (options.avatars) app.register(avatarRoutes, options.avatars)
   }
 

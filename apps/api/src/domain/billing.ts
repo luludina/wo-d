@@ -16,21 +16,44 @@ export interface BillingGenerationResult {
   totalAmountFen: number
 }
 
-export async function generateDueBills(
+export interface BillingPublishResult {
+  weekStart: string
+  weekEnd: string
+  published: boolean
+  billCount: number
+  totalQuantity: number
+  totalAmountFen: number
+}
+
+export async function generateDueBillDrafts(
   client: MongoClient,
   db: Db,
   billingStartDate: string,
   now = new Date(),
 ): Promise<BillingGenerationResult[]> {
-  const periods = enumerateDueBillingPeriods(billingStartDate, now)
+  const periods = enumerateDueBillingPeriods(billingStartDate, now, '17:00')
   const results: BillingGenerationResult[] = []
   for (const period of periods) {
-    results.push(await generateBillsForPeriod(client, db, period, now))
+    results.push(await generateBillDraftForPeriod(client, db, period, now))
   }
   return results
 }
 
-export async function generateBillsForPeriod(
+export async function publishDueBills(
+  client: MongoClient,
+  db: Db,
+  billingStartDate: string,
+  now = new Date(),
+): Promise<BillingPublishResult[]> {
+  const periods = enumerateDueBillingPeriods(billingStartDate, now, '18:00')
+  const results: BillingPublishResult[] = []
+  for (const period of periods) {
+    results.push(await publishBillsForPeriod(client, db, period, now))
+  }
+  return results
+}
+
+export async function generateBillDraftForPeriod(
   client: MongoClient,
   db: Db,
   period: BillingPeriod,
@@ -58,7 +81,7 @@ export async function generateBillsForPeriod(
           {
             date: { $gte: period.reservationFrom, $lte: period.weekEnd },
             status: 'active',
-            quantity: { $gt: 0 },
+            $or: [{ actualQuantity: { $gt: 0 } }, { actualQuantity: { $exists: false }, quantity: { $gt: 0 } }],
           },
           { session },
         )
@@ -78,7 +101,7 @@ export async function generateBillsForPeriod(
       for (const reservation of activeReservations) {
         const key = reservation.memberId.toHexString()
         const group = byMember.get(key) ?? { memberId: reservation.memberId, items: [] }
-        group.items.push({ date: reservation.date, quantity: reservation.quantity })
+        group.items.push({ date: reservation.date, quantity: reservation.actualQuantity ?? reservation.quantity })
         byMember.set(key, group)
       }
 
@@ -93,29 +116,13 @@ export async function generateBillsForPeriod(
           totalQuantity,
           unitPriceFen: EGG_UNIT_PRICE_FEN,
           totalAmountFen: totalQuantity * EGG_UNIT_PRICE_FEN,
+          status: 'draft',
           generatedAt,
           createdAt: generatedAt,
         }
       })
 
-      if (bills.length > 0) {
-        await dbCollections.bills.insertMany(bills, { session })
-        const expiresAt = new Date(generatedAt.getTime() + 365 * 24 * 60 * 60 * 1000)
-        await dbCollections.notifications.insertMany(
-          bills.map((bill) => ({
-            receiverId: bill.memberId,
-            type: 'bill_generated',
-            title: '本周鸡蛋账单已生成',
-            content: `本周共预约 ${bill.totalQuantity} 个鸡蛋，合计 ${formatYuan(bill.totalAmountFen)} 元`,
-            relatedDate: bill.weekStart,
-            relatedBillId: bill._id,
-            isRead: false,
-            createdAt: generatedAt,
-            expiresAt,
-          })),
-          { session },
-        )
-      }
+      if (bills.length > 0) await dbCollections.bills.insertMany(bills, { session })
 
       const totalQuantity = bills.reduce((sum, bill) => sum + bill.totalQuantity, 0)
       const totalAmountFen = bills.reduce((sum, bill) => sum + bill.totalAmountFen, 0)
@@ -126,6 +133,7 @@ export async function generateBillsForPeriod(
           billCount: bills.length,
           totalQuantity,
           totalAmountFen,
+          status: 'draft',
           generatedAt,
         },
         { session },
@@ -149,7 +157,81 @@ export async function generateBillsForPeriod(
     await session.endSession()
   }
 
-  if (!result) throw new Error(`Billing generation produced no result for ${period.weekStart}`)
+  if (!result) throw new Error(`Billing draft generation produced no result for ${period.weekStart}`)
+  return result
+}
+
+export async function publishBillsForPeriod(
+  client: MongoClient,
+  db: Db,
+  period: BillingPeriod,
+  publishedAt = new Date(),
+): Promise<BillingPublishResult> {
+  const session = client.startSession()
+  let result: BillingPublishResult | null = null
+  try {
+    await session.withTransaction(async () => {
+      const dbCollections = collections(db)
+      const run = await dbCollections.billingRuns.findOne({ weekStart: period.weekStart }, { session })
+      if (!run || run.status !== 'draft') {
+        result = {
+          weekStart: period.weekStart,
+          weekEnd: run?.weekEnd ?? period.weekEnd,
+          published: false,
+          billCount: run?.billCount ?? 0,
+          totalQuantity: run?.totalQuantity ?? 0,
+          totalAmountFen: run?.totalAmountFen ?? 0,
+        }
+        return
+      }
+
+      const bills = await dbCollections.bills
+        .find({ weekStart: period.weekStart, status: 'draft' }, { session })
+        .toArray()
+      const expiresAt = new Date(publishedAt.getTime() + 365 * 24 * 60 * 60 * 1000)
+      if (bills.length > 0) {
+        await dbCollections.notifications.insertMany(
+          bills.map((bill) => {
+            const totals = effectiveBillTotals(bill)
+            return {
+              receiverId: bill.memberId,
+              type: 'bill_generated',
+              title: '本周鸡蛋账单已生成',
+              content: `本周鸡蛋账单共 ${totals.totalQuantity} 个，合计 ${formatYuan(totals.totalAmountFen)} 元${bill.adjustmentReason ? `（管理员已调整：${bill.adjustmentReason}）` : ''}`,
+              relatedDate: bill.weekStart,
+              relatedBillId: bill._id,
+              isRead: false,
+              createdAt: publishedAt,
+              expiresAt,
+            }
+          }),
+          { session },
+        )
+        await dbCollections.bills.updateMany(
+          { weekStart: period.weekStart, status: 'draft' },
+          { $set: { status: 'published', publishedAt } },
+          { session },
+        )
+      }
+      await dbCollections.billingRuns.updateOne(
+        { weekStart: period.weekStart, status: 'draft' },
+        { $set: { status: 'published', publishedAt } },
+        { session },
+      )
+      result = {
+        weekStart: run.weekStart,
+        weekEnd: run.weekEnd,
+        published: true,
+        billCount: run.billCount,
+        totalQuantity: run.totalQuantity,
+        totalAmountFen: run.totalAmountFen,
+      }
+    })
+  } finally {
+    await session.endSession()
+  }
+
+  if (!result) throw new Error(`Billing publication produced no result for ${period.weekStart}`)
   return result
 }
 
@@ -161,6 +243,13 @@ function presentExistingRun(run: {
   totalAmountFen: number
 }): BillingGenerationResult {
   return { ...run, generated: false }
+}
+
+function effectiveBillTotals(bill: BillDocument) {
+  return {
+    totalQuantity: bill.adjustedTotalQuantity ?? bill.totalQuantity,
+    totalAmountFen: bill.adjustedTotalAmountFen ?? bill.totalAmountFen,
+  }
 }
 
 function formatYuan(amountFen: number): string {

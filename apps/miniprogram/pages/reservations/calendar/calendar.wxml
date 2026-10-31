@@ -92,6 +92,8 @@
           <view class="day-report-quantity {{item.quantity === 0 ? 'day-report-quantity-zero' : ''}}">
             <text>{{item.quantity}}</text> 个
           </view>
+          <button wx:if="{{isAdmin && canAdjustActual}}" class="day-report-adjust" data-member-id="{{item.memberId}}" bindtap="adminAdjustActualQuantity" aria-label="调整实际数量">✎</button>
+          <button wx:elif="{{!isAdmin && canAdjustActual && item.memberId === currentUserId}}" class="day-report-adjust" bindtap="requestActualQuantity" aria-label="申请调整实际数量">✎</button>
         </view>
       </view>
       <view class="unsubmitted-section">
@@ -107,6 +109,8 @@
             <view wx:else class="day-report-avatar day-report-avatar-fallback">{{item.avatarFallback}}</view>
             <view class="day-report-name">{{item.nickname}}</view>
             <view class="unsubmitted-tag">未上报</view>
+            <button wx:if="{{isAdmin && canAdjustActual}}" class="day-report-adjust" data-member-id="{{item.memberId}}" bindtap="adminAdjustActualQuantity" aria-label="补记实际数量">＋</button>
+            <button wx:elif="{{!isAdmin && canAdjustActual && item.memberId === currentUserId}}" class="day-report-adjust" bindtap="requestActualQuantity" aria-label="申请补记实际数量">＋</button>
           </view>
         </view>
       </view>
@@ -128,17 +132,15 @@
     <block wx:if="{{selectedDay.canEdit}}">
       <view class="quantity-editor">
         <button class="editor-button" data-delta="-1" bindtap="adjustDraftQuantity" disabled="{{draftQuantity === null || draftQuantity === 0}}">−</button>
-        <button class="quantity-display" bindtap="toggleQuantityOptions">{{draftQuantity === null ? '未填写' : draftQuantity}}</button>
+        <view class="quantity-display">{{draftQuantity === null ? '未填写' : draftQuantity}}</view>
         <button class="editor-button" data-delta="1" bindtap="adjustDraftQuantity" disabled="{{draftQuantity === 5}}">＋</button>
-      </view>
-      <view wx:if="{{showQuantityOptions}}" class="quantity-options">
-        <button wx:for="{{quantityOptions}}" wx:key="*this" class="quantity-option {{draftQuantity === item ? 'quantity-option-active' : ''}}" data-quantity="{{item}}" bindtap="chooseQuantity">{{item}}</button>
       </view>
       <button class="primary-button submit-button" bindtap="submitDay" loading="{{daySaving}}" disabled="{{!dayCanSubmit || daySaving}}">提交</button>
     </block>
     <view wx:else class="readonly-state">
       <view class="readonly-icon">{{selectedDay.stateKind === 'closed' ? '休' : selectedDay.stateKind === 'unavailable' ? '待' : '锁'}}</view>
       <view>{{selectedDayReadonlyText}}</view>
+      <button wx:if="{{canAdjustActual && selectedDay.isLocked && selectedDay.status === 'open'}}" class="secondary-button" bindtap="requestActualQuantity">申请调整实际数量</button>
     </view>
   </view>
 </view>

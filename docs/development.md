@@ -30,26 +30,30 @@ Set `NODE_EXTRA_CA_CERTS` before starting the API to use a different CA bundle.
 
 API endpoints:
 
-- `GET http://localhost:3000/health/live`
-- `GET http://localhost:3000/health/ready`
-- `GET http://localhost:3000/docs`
+- `GET http://localhost:3210/health/live`
+- `GET http://localhost:3210/health/ready`
+- `GET http://localhost:3210/docs`
 
 The mini program uses `PUT` for profile updates because native `wx.request`
 does not support the HTTP `PATCH` method.
 
 Import `apps/miniprogram` into WeChat DevTools to open the mini program skeleton.
-The checked-in development API address is `http://127.0.0.1:3000`; replace
+The checked-in development API address is `http://127.0.0.1:3210`; replace
 `apiBaseUrl` in `apps/miniprogram/app.ts` with the registered HTTPS API domain
 before previewing on a physical device or releasing the mini program.
 
 The mini program selects its API automatically by WeChat environment:
 
-- development: `http://127.0.0.1:3000`
+- development: `http://127.0.0.1:3210`
 - trial and release: `https://egg.zzlulu.cloud`
 
 `BILLING_START_DATE` controls the first date included in weekly billing. The
-production value is `2026-10-09`; bills are generated every Sunday after 18:00
-Asia/Shanghai time, and missed runs are recovered when the API starts again.
+production value is `2026-10-09`; an admin-visible bill draft is generated every
+Friday after 17:00 Asia/Shanghai time for Monday through Friday reservations.
+Personal bills and notifications are published from the adjusted draft after
+18:00, and missed stages are recovered when the API starts again. Administrators
+can also generate the current-week draft and publish it manually. A manually
+published run is idempotently skipped by the 18:00 scheduler.
 
 ## Production deployment
 

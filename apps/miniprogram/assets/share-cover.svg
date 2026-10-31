@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800" viewBox="0 0 1000 800">
+  <rect width="1000" height="800" fill="#f5f8f6"/>
+  <rect x="64" y="64" width="872" height="672" rx="32" fill="#e7f2eb"/>
+  <circle cx="260" cy="400" r="142" fill="#d5eadc"/>
+  <path d="M260 246c-66 0-112 94-112 176 0 75 50 132 112 132s112-57 112-132c0-82-46-176-112-176Z" fill="#fffdf7"/>
+  <circle cx="260" cy="423" r="43" fill="#f2b35f"/>
+  <text x="462" y="367" fill="#203229" font-family="PingFang SC, sans-serif" font-size="70" font-weight="600">鸡蛋预约</text>
+  <text x="466" y="450" fill="#5f7468" font-family="PingFang SC, sans-serif" font-size="34">每天几颗，提前报好</text>
+</svg>

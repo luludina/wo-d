@@ -119,6 +119,7 @@ export interface ReservationDayDetailsBody {
   totalEggs: number
   filledMemberCount: number
   unsubmittedMemberCount: number
+  billingGenerated?: boolean
   items: ReservationDaySubmission[]
   unsubmittedItems: ReservationDayMember[]
 }
@@ -198,6 +199,11 @@ export interface BillSummary {
   unitPriceFen: number
   totalAmountFen: number
   generatedAt: string
+  originalTotalQuantity: number
+  originalTotalAmountFen: number
+  isAdjusted: boolean
+  adjustmentReason?: string
+  adjustedAt?: string
 }
 
 export interface BillDetail extends BillSummary {
@@ -214,19 +220,29 @@ export interface AdminBillRunSummary {
   memberCount: number
   totalQuantity: number
   totalAmountFen: number
+  status: 'draft' | 'published'
   generatedAt: string
+  publishedAt?: string
 }
 
 export interface AdminBillRunListBody {
+  currentWeekStart: string
+  canGenerateCurrentWeek: boolean
   items: AdminBillRunSummary[]
 }
 
 export interface AdminBillMemberItem {
+  billId: string
   memberId: string
-  nickname: string
+  realName: string
   avatarUrl?: string
   totalQuantity: number
   totalAmountFen: number
+  originalTotalQuantity: number
+  originalTotalAmountFen: number
+  isAdjusted: boolean
+  adjustmentReason?: string
+  adjustedAt?: string
 }
 
 export interface AdminBillRunDetail extends AdminBillRunSummary {

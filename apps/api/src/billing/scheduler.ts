@@ -1,6 +1,5 @@
 import type { FastifyBaseLogger } from 'fastify'
 import type { Db, MongoClient } from 'mongodb'
-import { generateDueBills } from '../domain/billing.js'
 
 const CHECK_INTERVAL_MS = 60_000
 
@@ -11,20 +10,7 @@ export async function runBillingSchedulerCycle(
   logger: FastifyBaseLogger,
   now = new Date(),
 ): Promise<void> {
-  const results = await generateDueBills(client, db, billingStartDate, now)
-  for (const result of results) {
-    if (!result.generated) continue
-    logger.info(
-      {
-        weekStart: result.weekStart,
-        weekEnd: result.weekEnd,
-        billCount: result.billCount,
-        totalQuantity: result.totalQuantity,
-        totalAmountFen: result.totalAmountFen,
-      },
-      'weekly bills generated',
-    )
-  }
+  logger.debug({ billingStartDate, now }, 'automatic billing scheduler disabled; bills require manual generation and publishing')
 }
 
 export function startBillingScheduler(

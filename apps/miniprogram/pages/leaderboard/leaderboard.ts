@@ -1,5 +1,6 @@
 import type { LeaderboardBody, LeaderboardMember, LeaderboardPeriod } from '@egg-booking/contracts'
 import { apiRequest, resolveApiUrl } from '../../services/api'
+import { createShareAppMessage } from '../../services/share'
 
 interface LeaderboardRow extends LeaderboardMember {
   avatarSrc: string
@@ -53,6 +54,8 @@ function presentMember(item: LeaderboardMember): LeaderboardRow {
 }
 
 Page({
+  onShareAppMessage: createShareAppMessage,
+
   data: {
     periodOptions,
     activePeriod: 'week' as LeaderboardPeriod,

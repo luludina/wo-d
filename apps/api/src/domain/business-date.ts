@@ -8,6 +8,12 @@ const shanghaiDateFormatter = new Intl.DateTimeFormat('en-CA', {
   month: '2-digit',
   day: '2-digit',
 })
+const shanghaiTimeFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Asia/Shanghai',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+})
 
 export function parseBusinessDate(value: string): Date {
   const match = DATE_PATTERN.exec(value)
@@ -67,27 +73,15 @@ export function enumerateBusinessDates(from: string, to: string, maximum = 62): 
   return dates
 }
 
-export function assertMealDayWindow(from: string, to: string, now = new Date()): string[] {
-  const today = getShanghaiToday(now)
-  const end = getReservationWindowEnd(today)
-  if (from < today || to > end) {
-    throw new AppError(400, 'MEAL_DAY_WINDOW_INVALID', `只能设置 ${today} 至 ${end} 的供餐日`)
-  }
+export function assertMealDayWindow(from: string, to: string): string[] {
   return enumerateBusinessDates(from, to)
 }
 
 export function assertMealDayActionWindow(
   from: string,
   to: string,
-  status: MealDayStatus,
-  now = new Date(),
 ): string[] {
-  const dates = assertMealDayWindow(from, to, now)
-  const today = getShanghaiToday(now)
-  if (status === 'closed' && from <= today) {
-    throw new AppError(400, 'MEAL_DAY_CLOSE_TOO_LATE', '关闭供餐最早只能从明天开始')
-  }
-  return dates
+  return assertMealDayWindow(from, to)
 }
 
 export function getDefaultMealDayStatus(date: string): MealDayStatus {
@@ -124,11 +118,6 @@ export function isReservationLocked(date: string, now = new Date()): boolean {
   const today = getShanghaiToday(now)
   if (date < today) return true
   if (date > today) return false
-  const time = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Shanghai',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).format(now)
+  const time = shanghaiTimeFormatter.format(now)
   return time >= '09:00'
 }

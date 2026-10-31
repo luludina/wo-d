@@ -86,6 +86,10 @@
   font-size: 21rpx;
 }
 
+.adjusted-label {
+  color: #946226;
+}
+
 .bill-arrow {
   width: 22rpx;
   height: 22rpx;
@@ -97,15 +101,9 @@
   border-top: 1rpx solid var(--color-border);
 }
 
-.bill-eggs {
+.bill-amount-label {
   color: var(--color-muted);
   font-size: 23rpx;
-}
-
-.bill-eggs-number {
-  color: var(--color-text);
-  font-size: 32rpx;
-  font-weight: 600;
 }
 
 .bill-amount {

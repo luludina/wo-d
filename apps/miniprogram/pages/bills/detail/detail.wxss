@@ -44,60 +44,23 @@
   font-size: 30rpx;
 }
 
-.summary-meta {
-  margin-top: 14rpx;
-  color: var(--color-muted);
-  font-size: 23rpx;
+.adjustment-notice {
+  margin-top: 20rpx;
+  padding: 22rpx 24rpx;
+  border: 1rpx solid #f0d7ae;
+  border-radius: 12rpx;
+  background: #fff8ec;
 }
 
-.detail-section {
-  margin-top: 32rpx;
-}
-
-.section-title {
-  margin: 0 4rpx 16rpx;
-  font-size: 29rpx;
+.adjustment-notice-title {
+  color: #81551f;
+  font-size: 25rpx;
   font-weight: 600;
 }
 
-.detail-list {
-  overflow: hidden;
-  border: 1rpx solid var(--color-border);
-  border-radius: 16rpx;
-  background: var(--color-surface);
-}
-
-.detail-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 96rpx;
-  padding: 18rpx 26rpx;
-}
-
-.detail-row + .detail-row::before {
-  position: absolute;
-  top: 0;
-  right: 26rpx;
-  left: 26rpx;
-  height: 1rpx;
-  background: var(--color-border);
-  content: '';
-}
-
-.detail-date {
-  font-size: 27rpx;
-}
-
-.detail-weekday {
-  margin-left: 14rpx;
-  color: var(--color-muted);
+.adjustment-notice-copy {
+  margin-top: 8rpx;
+  color: #8c714e;
   font-size: 22rpx;
-}
-
-.detail-quantity {
-  color: var(--color-primary);
-  font-size: 29rpx;
-  font-weight: 600;
+  line-height: 1.55;
 }

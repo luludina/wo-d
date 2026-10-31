@@ -1,5 +1,6 @@
 import type { CurrentUser, MemberListBody, MemberStatus } from '@egg-booking/contracts'
 import { apiRequest, resolveApiUrl } from '../../../services/api'
+import { createShareAppMessage } from '../../../services/share'
 
 type MemberAction = 'approve' | 'reject' | 'disable' | 'enable' | 'grant-admin' | 'revoke-admin'
 
@@ -19,6 +20,8 @@ const statusLabels: Record<MemberStatus, string> = {
 }
 
 Page({
+  onShareAppMessage: createShareAppMessage,
+
   data: {
     tabs: [
       { value: 'pending', label: '待审核' },

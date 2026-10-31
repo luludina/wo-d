@@ -8,19 +8,19 @@
   <view wx:elif="{{items.length === 0}}" class="empty-state">
     <view class="empty-icon">单</view>
     <view class="empty-title">还没有账单</view>
-    <view class="empty-copy">每周日18:00生成当周账单</view>
+    <view class="empty-copy">每周五18:00推送当周个人账单</view>
   </view>
   <view wx:else class="bill-list">
     <view wx:for="{{items}}" wx:key="id" class="bill-card" data-id="{{item.id}}" bindtap="openBill" hover-class="bill-card-hover">
       <view class="bill-card-top">
         <view>
           <view class="bill-period">{{item.periodText}}</view>
-          <view class="bill-generated">{{item.generatedText}}</view>
+          <view class="bill-generated">{{item.generatedText}}<text wx:if="{{item.isAdjusted}}" class="adjusted-label"> · 管理员已调整</text></view>
         </view>
         <image class="bill-arrow" src="/assets/icons/profile/right.svg" mode="aspectFit" />
       </view>
       <view class="bill-card-bottom">
-        <view class="bill-eggs"><text class="bill-eggs-number">{{item.totalQuantity}}</text> 个鸡蛋</view>
+        <view class="bill-amount-label">账单金额</view>
         <view class="bill-amount"><text class="bill-currency">¥</text>{{item.amountText}}</view>
       </view>
     </view>

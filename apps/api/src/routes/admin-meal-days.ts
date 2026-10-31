@@ -90,7 +90,6 @@ export const adminMealDayRoutes: FastifyPluginAsync = async (app) => {
       const dates = assertMealDayActionWindow(
         request.body.from,
         request.body.to,
-        request.body.status,
       )
       const snapshot = await loadMealDaySnapshot(app.mongo.db, dates)
       return buildMealDayPreview(
@@ -119,7 +118,6 @@ export const adminMealDayRoutes: FastifyPluginAsync = async (app) => {
       const dates = assertMealDayActionWindow(
         request.body.from,
         request.body.to,
-        request.body.status,
       )
       const mongoSession = app.mongo.client.startSession()
       let response: MealDayBatchPreview | null = null

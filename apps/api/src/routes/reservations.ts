@@ -57,10 +57,16 @@ export const reservationRoutes: FastifyPluginAsync = async (app) => {
     async (request) => {
       enumerateBusinessDates(request.params.date, request.params.date)
       const { reservations, users } = collections(app.mongo.db)
+      const dateValue = new Date(`${request.params.date}T00:00:00Z`)
+      const monday = new Date(dateValue)
+      const weekday = monday.getUTCDay() || 7
+      monday.setUTCDate(monday.getUTCDate() - weekday + 1)
+      const weekStart = monday.toISOString().slice(0, 10)
       const [reservationDocuments, members] = await Promise.all([
         reservations.find({ date: request.params.date, status: 'active' }).toArray(),
         users.find({ memberStatus: 'approved' }).toArray(),
       ])
+      const billingGenerated = Boolean(await collections(app.mongo.db).billingRuns.findOne({ weekStart }))
       const reservationMap = new Map(
         reservationDocuments.map((reservation) => [reservation.memberId.toHexString(), reservation]),
       )
@@ -72,7 +78,7 @@ export const reservationRoutes: FastifyPluginAsync = async (app) => {
       const items = members
         .flatMap((member) => {
           const reservation = reservationMap.get(member._id.toHexString())
-          return reservation ? [{ ...memberView(member), quantity: reservation.quantity }] : []
+          return reservation ? [{ ...memberView(member), quantity: reservation.actualQuantity ?? reservation.quantity, reservedQuantity: reservation.quantity, isAdjusted: reservation.actualQuantity !== undefined }] : []
         })
         .sort((left, right) => right.quantity - left.quantity || left.nickname.localeCompare(right.nickname, 'zh-CN'))
       const unsubmittedItems = members
@@ -85,6 +91,7 @@ export const reservationRoutes: FastifyPluginAsync = async (app) => {
         totalEggs: items.reduce((sum, item) => sum + item.quantity, 0),
         filledMemberCount: items.length,
         unsubmittedMemberCount: unsubmittedItems.length,
+        billingGenerated,
         items,
         unsubmittedItems,
       }
@@ -211,7 +218,9 @@ export const reservationRoutes: FastifyPluginAsync = async (app) => {
         ...(override ? { version: override.version } : {}),
         reservation: reservation
           ? {
-              quantity: reservation.quantity,
+              quantity: reservation.actualQuantity ?? reservation.quantity,
+              reservedQuantity: reservation.quantity,
+              isAdjusted: reservation.actualQuantity !== undefined,
               status: reservation.status,
               isLocked: isReservationLocked(date, now),
               ...(reservation.cancelledReason ? { cancelledReason: reservation.cancelledReason } : {}),

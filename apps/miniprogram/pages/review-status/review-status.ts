@@ -1,6 +1,9 @@
 import { getCurrentUser } from '../../services/auth'
+import { createShareAppMessage } from '../../services/share'
 
 Page({
+  onShareAppMessage: createShareAppMessage,
+
   data: { checking: false },
 
   async checkStatus() {

@@ -35,16 +35,9 @@
   font-weight: 600;
 }
 
-.date-range-row {
-  display: flex;
-  align-items: center;
+.selected-date-picker {
+  display: block;
   margin-top: 24rpx;
-  gap: 10rpx;
-}
-
-.date-picker {
-  flex: 1;
-  min-width: 0;
 }
 
 .date-field {
@@ -53,10 +46,6 @@
   border: 1rpx solid var(--color-border);
   border-radius: 10rpx;
   background: #ffffff;
-}
-
-.date-field-empty {
-  border-style: dashed;
 }
 
 .field-label {
@@ -87,40 +76,6 @@
   margin-left: 6rpx;
   color: var(--color-muted);
   font-size: 28rpx;
-}
-
-.range-divider {
-  flex: 0 0 30rpx;
-  color: var(--color-muted);
-  font-size: 22rpx;
-  text-align: center;
-}
-
-.range-summary {
-  display: flex;
-  align-items: center;
-  min-height: 60rpx;
-  margin-top: 18rpx;
-  padding: 12rpx 16rpx;
-  border-radius: 10rpx;
-  background: #f3f7f4;
-  color: var(--color-muted);
-  font-size: 22rpx;
-  line-height: 1.4;
-  gap: 10rpx;
-}
-
-.summary-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 30rpx;
-  width: 30rpx;
-  height: 30rpx;
-  border-radius: 50%;
-  background: #dcece2;
-  color: var(--color-primary);
-  font-size: 18rpx;
 }
 
 .single-detail {
@@ -235,12 +190,6 @@
   box-sizing: border-box;
 }
 
-.month-button-disabled {
-  border-color: #edf1ee;
-  background: #f7f9f8;
-  color: #c4cec8;
-}
-
 .month-arrow {
   height: 54rpx;
   font-size: 42rpx;
@@ -255,7 +204,7 @@
   font-weight: 600;
 }
 
-.icon-button-hover:not(.month-button-disabled) {
+.icon-button-hover {
   opacity: 0.72;
 }
 
@@ -313,31 +262,13 @@
   color: #c5cec8;
 }
 
-.is-in-range {
-  background: #edf6f0;
-  border-radius: 0;
-}
-
-.is-range-start {
-  border-radius: 12rpx 0 0 12rpx;
-}
-
-.is-range-end {
-  border-radius: 0 12rpx 12rpx 0;
-}
-
-.is-range-start.is-range-end {
-  border-radius: 12rpx;
-}
-
-.is-range-start .day-number,
-.is-range-end .day-number {
+.is-selected .day-number {
   background: var(--color-primary);
   color: #ffffff;
   font-weight: 600;
 }
 
-.is-today:not(.is-range-start):not(.is-range-end) .day-number {
+.is-today:not(.is-selected) .day-number {
   box-shadow: inset 0 0 0 2rpx var(--color-primary);
   color: var(--color-primary);
 }
@@ -462,7 +393,7 @@
 
 .impact-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 28rpx;
   padding: 20rpx 8rpx;
   border-radius: 12rpx;

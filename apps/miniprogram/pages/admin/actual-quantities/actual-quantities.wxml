@@ -1,0 +1,24 @@
+<view class="screen">
+  <view class="page-title">实际数量审批</view>
+  <view wx:if="{{loading}}" class="state-block">正在加载...</view>
+  <view wx:elif="{{items.length === 0}}" class="empty-state">暂无待审批申请</view>
+  <view wx:else>
+    <view wx:for="{{items}}" wx:key="_id" class="request-card">
+      <image wx:if="{{item.applicantAvatarUrl}}" class="request-avatar" src="{{item.applicantAvatarUrl}}" mode="aspectFill" />
+      <view wx:else class="request-avatar request-avatar-fallback">成</view>
+      <view class="request-content">
+        <view class="request-name">{{item.applicantName}}</view>
+        <view class="request-quantity"><text>{{item.originalQuantity}}</text><text class="arrow">→</text><text class="requested">{{item.quantity}}</text><text class="unit">个</text></view>
+      </view>
+      <view class="request-meta">
+        <view class="request-date">{{item.date}}</view>
+        <view wx:if="{{item.status !== 'pending'}}" class="request-status status-{{item.status}}">{{item.status === 'approved' ? '已通过' : item.status === 'rejected' ? '已驳回' : '已更新'}}</view>
+        <view wx:else class="request-actions">
+          <button class="icon-action" data-index="{{index}}" bindtap="approve" aria-label="通过">✓</button>
+          <button class="icon-action edit" data-index="{{index}}" bindtap="adjust" aria-label="修改数量">✎</button>
+          <button class="icon-action reject" data-index="{{index}}" bindtap="reject" aria-label="驳回">×</button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

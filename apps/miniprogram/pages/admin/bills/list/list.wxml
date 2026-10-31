@@ -1,21 +1,34 @@
 <view class="screen admin-bills-screen">
   <view class="page-header">
-    <view class="page-title">账单汇总</view>
-    <view class="page-subtitle">根据每周有效预约生成</view>
+    <view class="page-header-copy">
+      <view class="page-title">账单汇总</view>
+      <view class="page-subtitle">根据每周有效预约生成</view>
+    </view>
+    <button
+      class="generate-button"
+      bindtap="generateCurrentWeekBill"
+      loading="{{generating}}"
+      disabled="{{loading || generating || !canGenerateCurrentWeek}}"
+    >{{loading ? '读取中' : (canGenerateCurrentWeek ? '生成本周账单' : '本周已生成')}}</button>
   </view>
+
+  <view wx:if="{{currentPeriodText}}" class="current-week-tip">当前账期：{{currentPeriodText}}</view>
 
   <view wx:if="{{loading}}" class="state-block">正在读取账单汇总...</view>
   <view wx:elif="{{items.length === 0}}" class="empty-state">
     <view class="empty-icon">汇</view>
     <view class="empty-title">还没有账单汇总</view>
-    <view class="empty-copy">每周日18:00生成当周账单</view>
+    <view class="empty-copy">每周五17:00生成待推送汇总</view>
   </view>
   <view wx:else class="bill-list">
     <view wx:for="{{items}}" wx:key="weekStart" class="bill-card" data-week-start="{{item.weekStart}}" bindtap="openDetail" hover-class="bill-card-hover">
       <view class="bill-card-top">
         <view>
           <view class="bill-period">{{item.periodText}}</view>
-          <view class="bill-generated">{{item.generatedText}}</view>
+          <view class="bill-generated">
+            <text>{{item.generatedText}}</text>
+            <text class="bill-status status-{{item.status}}">{{item.statusText}}</text>
+          </view>
         </view>
         <image class="bill-arrow" src="/assets/icons/profile/right.svg" mode="aspectFit" />
       </view>
@@ -24,11 +37,7 @@
           <view class="metric-value">{{item.memberCount}}</view>
           <view class="metric-label">成员</view>
         </view>
-        <view class="metric metric-middle">
-          <view class="metric-value">{{item.totalQuantity}}</view>
-          <view class="metric-label">鸡蛋</view>
-        </view>
-        <view class="metric">
+        <view class="metric metric-amount-block">
           <view class="metric-value metric-amount"><text>¥</text>{{item.amountText}}</view>
           <view class="metric-label">合计</view>
         </view>
